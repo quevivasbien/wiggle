@@ -1,6 +1,6 @@
 <script lang="ts">
     import Wiggle from "../components/Wiggle.svelte";
-    import Board from "../components/Board.svelte";
+    import Game from "../components/Game.svelte";
     import { slide } from "svelte/transition";
 
     let playing = false;
@@ -20,13 +20,16 @@
     <Wiggle wiggleSpacing={wiggleSpacing} />
 
     {#if !playing}
+        <div class="font-serif">
+            the wiggly word game
+        </div>
         <form class="flex flex-col m-2 p-2 bg-gray-100 rounded-md" on:submit={(e) => submitPlay(e)} transition:slide>
             <label class="p-2" for="size">
                 <div class="p-3">
                     Board size:
                 </div>
                 <div class="flex flex-row justify-center">
-                    <input class="w-1/3 " type="range" min="3" max="10" bind:value={size} />
+                    <input class="w-1/3 accent-gray-500" type="range" min="3" max="6" bind:value={size} />
                     <div class="px-3">
                         {size} x {size}
                     </div>
@@ -37,7 +40,7 @@
                     Minimum word length:
                 </div>
                 <div class="flex flex-row justify-center">
-                    <input class="w-1/3 " type="range" min="3" max="5" bind:value={minLength} />
+                    <input class="w-1/3 accent-gray-500" type="range" min="3" max="5" bind:value={minLength} />
                     <div class="px-3">
                         {minLength}
                     </div>
@@ -47,10 +50,7 @@
         </form>
     {:else}
         <div transition:slide>
-            <Board size={size} minLength={minLength} />
-            <div class="mt-8">
-                <button class="w-1/3 mx-auto my-4 py-2 px-3 rounded-lg bg-white border-2 hover:border-blue-100 focus:bg-gray-100 drop-shadow" on:click={() => playing = false}>New game</button>
-            </div>
+            <Game size={size} minLength={minLength} on:newGame={() => playing = false} />
         </div>
     {/if}
 </div>

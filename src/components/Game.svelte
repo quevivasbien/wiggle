@@ -1,15 +1,21 @@
 <script lang="ts">
-    import { onMount } from "svelte";
+    import { onMount, createEventDispatcher } from "svelte";
     import { Board } from "../scripts/board";
     import { compressQu, expandQu } from "../scripts/utils";
     import { slide } from "svelte/transition";
+    import AllWords from "./AllWords.svelte";
 
     export let size: number;
     export let minLength: number;
+    export let focus: boolean = true;
 
     let board: Board;
+    let textInputField: HTMLInputElement;
     onMount(() => {
         board = Board.random(size, minLength);
+        if (focus) {
+            textInputField.focus();
+        }
     });
 
     let wordInput: string = "";
@@ -35,10 +41,12 @@
 
     function submit(e: Event) {
         e.preventDefault();
+        if (showAllWords) {
+            return;
+        }
         const status = board.checkWord(compressQu(wordInput.toLowerCase()));
         if (status === "ok") {
             addWordFound(wordInput);
-            console.log(wordsFound);
             setHighlights(path);
             path = [];
         }
@@ -55,6 +63,7 @@
     }
 
     function addWordFound(word: string) {
+        word = word.toLowerCase();
         if (!wordsFound.includes(word)) {
             wordsFound = [...wordsFound, word];
         }
@@ -89,6 +98,13 @@
         }
         return words;
     }
+
+    let showAllWords = false;
+    const dispatch = createEventDispatcher();
+    
+    function newGame() {
+        dispatch("newGame");
+    }
 </script>
 
 <div class="flex flex-col items-center m-2 p-2">
@@ -107,7 +123,7 @@
     </div>
     <form on:submit={(e) => submit(e)}>
         <div class="flex flex-row justify-center">
-            <input class="w-2/3 max-w-2xl my-4 p-2 rounded-sm drop-shadow uppercase text-center font-bold" type="text" bind:value={wordInput} />
+            <input class="w-2/3 max-w-2xl my-4 p-2 rounded-sm drop-shadow uppercase text-center font-bold" type="text" bind:value={wordInput} bind:this={textInputField} />
             <button type="submit" class="m-4 py-2 px-3 rounded-lg bg-white border-2 hover:border-blue-100 focus:bg-gray-100 drop-shadow">&#10132;</button>
         </div>
     </form>
@@ -116,18 +132,30 @@
         {alertText}
     </div>
     {/if}
-    {#if wordsFound.length > 0}
-    <div>
-        Words found ({wordsFound.length}):
-        <div class="flex flex-row">
-            {#each splitWordsFound(Math.min(wordsFound.length, 3)) as column}
-                <div class="flex flex-col basis-40">
-                {#each column as word}
-                    <div class="m-1 p-2 rounded-md bg-gray-300">{word}</div>
-                {/each}
-                </div>
-            {/each}
-        </div>
-    </div>
-    {/if}
 </div>
+    {#if showAllWords}
+        <!-- shown if game is done-->
+        <AllWords board={board} wordsFound={wordsFound} />
+        <div class="mt-8">
+            <button class="w-1/3 mx-auto my-4 py-2 px-3 rounded-lg bg-white border-2 hover:border-blue-100 focus:bg-gray-100 drop-shadow" on:click={newGame}>New game</button>
+        </div>
+    {:else}
+        <!-- shown during game -->
+        {#if wordsFound.length > 0}
+        <div>
+            Words found ({wordsFound.length}):
+            <div class="flex flex-row justify-center">
+                {#each splitWordsFound(Math.min(wordsFound.length, 3)) as column}
+                    <div class="flex flex-col basis-40">
+                    {#each column as word}
+                        <div class="m-1 p-2 rounded-md bg-gray-300">{word}</div>
+                    {/each}
+                    </div>
+                {/each}
+            </div>
+        </div>
+        {/if}
+        <div class="mt-8">
+            <button class="w-1/3 mx-auto my-4 py-2 px-3 rounded-lg bg-white border-2 hover:border-blue-100 focus:bg-gray-100 drop-shadow" on:click={() => showAllWords = true}>Show solutions</button>
+        </div>
+    {/if}
