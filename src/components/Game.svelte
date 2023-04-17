@@ -1,9 +1,9 @@
 <script lang="ts">
     import { onMount, createEventDispatcher } from "svelte";
-    import { Board } from "../scripts/board";
-    import { compressQu, expandQu } from "../scripts/utils";
+    import Board from "$scripts/board";
+    import { compressQu, expandQu } from "$scripts/utils";
     import { slide } from "svelte/transition";
-    import AllWords from "./AllWords.svelte";
+    import AllWords from "$components/AllWords.svelte";
 
     export let size: number;
     export let minLength: number;

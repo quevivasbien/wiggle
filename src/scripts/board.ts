@@ -1,6 +1,6 @@
-import { loadWords, CharDist } from "./utils";
+import { loadWords, CharDist } from "$scripts/utils";
 
-export class Board {
+export default class Board {
     size: number;
     chars: string;
     minLength: number;

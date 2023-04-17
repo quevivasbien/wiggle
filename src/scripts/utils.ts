@@ -1,4 +1,4 @@
-import words from '../data/words.json';
+import words from '$data/words.json';
 
 export function loadWords(minLength: number): string[] {
     return words
