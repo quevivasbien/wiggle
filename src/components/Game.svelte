@@ -117,7 +117,8 @@
         {/each}
         {/if}
     </div>
-    <form on:submit={(e) => submit(e)}>
+    {#if !showAllWords}
+    <form on:submit={(e) => submit(e)} out:slide>
         <div class="flex flex-row justify-center">
             <input class="w-2/3 max-w-2xl my-4 p-2 rounded-sm drop-shadow uppercase text-center font-bold" type="text" bind:value={wordInput} bind:this={textInputField} />
             <button type="submit" class="m-4 py-2 px-3 rounded-lg bg-white border-2 hover:border-blue-100 focus:bg-gray-100 drop-shadow">
@@ -125,6 +126,7 @@
             </button>
         </div>
     </form>
+    {/if}
     {#if alertText}
     <div class="text-red-500 font-bold p-2" transition:slide>
         {alertText}
@@ -154,6 +156,6 @@
         </div>
         {/if}
         <div class="mt-8">
-            <button class="w-1/3 mx-auto my-4 py-2 px-3 rounded-lg bg-white border-2 hover:border-blue-100 focus:bg-gray-100 drop-shadow" on:click={() => showAllWords = true}>Show solutions</button>
+            <StyledButton onclick={() => showAllWords = true}>Show solutions</StyledButton>
         </div>
     {/if}

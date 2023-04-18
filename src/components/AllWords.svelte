@@ -1,6 +1,6 @@
 <script lang="ts">
     import { onMount } from "svelte";
-    import type { Board } from "$scripts/board";
+    import type Board from "$scripts/board";
     import { fade } from "svelte/transition";
 
     export let board: Board;

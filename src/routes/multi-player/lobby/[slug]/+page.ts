@@ -1,10 +1,13 @@
+import { error, type LoadEvent } from '@sveltejs/kit';
 import { newRandomId, type GameData } from '$scripts/multiplayer.js';
 
-export async function load(event) {
+export async function load(event: LoadEvent) {
     const lobbyID = event.params.slug;
     // get game info from database
     const gameResponse = await event.fetch(`/api/games?gameID=${lobbyID}`);
-    if (!gameResponse.ok) throw new Error(gameResponse.statusText);
+    if (!gameResponse.ok) {
+        return error(404, "Game not found");
+    };
     const gameData: GameData = await gameResponse.json();
     // generate user id
     const myID = newRandomId();
@@ -16,6 +19,8 @@ export async function load(event) {
             lobbyID: lobbyID,
             action: "join",
         }),
+    }).then((response) => {
+        console.log("Joined jobby and received response: ", response);
     });
     // get a reader for the lobby stream
     // subscribe to stream

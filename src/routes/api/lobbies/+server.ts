@@ -3,7 +3,7 @@ import { database } from "$server/database";
 
 export async function GET({ url }) {
     // subscribe to a stream of updates to a lobby
-    const lobbyID = url.searchParams.get("lobbyID");
+    const lobbyID = (url as URL).searchParams.get("lobbyID");
     if (!lobbyID) {
         return new Response("lobbyID param required", { status: 400 });
     }
@@ -38,18 +38,18 @@ export async function GET({ url }) {
     });
 }
 
-function joinLobby(lobbyID: string, userID: string) {
+async function joinLobby(lobbyID: string, userID: string) {
     const lobbyRef = ref(database, `lobbies/${lobbyID}`);
-    get(lobbyRef).then((snapshot) => {
+    await get(lobbyRef).then((snapshot) => {
         const playersReady = snapshot.val() || {};
         playersReady[userID] = false;
         set(lobbyRef, playersReady);
     });
 }
 
-function setReady(lobbyID: string, userID: string) {
+async function setReady(lobbyID: string, userID: string) {
     const lobbyRef = ref(database, `lobbies/${lobbyID}`);
-    get(lobbyRef).then((snapshot) => {
+    await get(lobbyRef).then((snapshot) => {
         const playersReady = snapshot.val() || {};
         if (playersReady[userID] === undefined) {
             throw new Error("user not in lobby");
@@ -59,9 +59,9 @@ function setReady(lobbyID: string, userID: string) {
     });
 }
 
-function leaveLobby(lobbyID: string, userID: string) {
+async function leaveLobby(lobbyID: string, userID: string) {
     const lobbyRef = ref(database, `lobbies/${lobbyID}`);
-    get(lobbyRef).then((snapshot) => {
+    await get(lobbyRef).then((snapshot) => {
         const playersReady = snapshot.val() || {};
         if (playersReady[userID] === undefined) {
             throw new Error("user not in lobby");
@@ -74,15 +74,15 @@ function leaveLobby(lobbyID: string, userID: string) {
 export async function POST({ request }) {
     const { userID, lobbyID, action } = await request.json();
     if (action === "join") {
-        joinLobby(lobbyID, userID);
+        await joinLobby(lobbyID, userID);
         return new Response("ok");
     }
     else if (action === "ready") {
-        setReady(lobbyID, userID);
+        await setReady(lobbyID, userID);
         return new Response("ok");
     }
     else if (action === "leave") {
-        leaveLobby(lobbyID, userID);
+        await leaveLobby(lobbyID, userID);
         return new Response("ok");
     }
     return new Response("invalid action", { status: 400 });

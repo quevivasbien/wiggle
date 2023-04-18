@@ -6,6 +6,7 @@
     import StyledButton from "$components/StyledButton.svelte";
 
     export let data;
+    console.log("Games page data: ", data);
 
     let games: Record<string, GameData>;
     $: gameIDs = games ? Object.keys(games) : [];
@@ -55,7 +56,7 @@
 </div>
 <div>
     {#if !showNewGameMenu}
-        <StyledButton on:click={() => showNewGameMenu = true}>
+        <StyledButton onclick={() => showNewGameMenu = true}>
             New game
         </StyledButton>
     {:else}

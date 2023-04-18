@@ -2,11 +2,18 @@
     import { onMount, onDestroy } from "svelte";
 
     export let data;
+    if (!data.gameData) {
+        throw Error("gameData is undefined");
+    }
+    const { size, minLength } = data.gameData;
 
     let playersReady: Record<string, boolean>;
 
     onMount(async () => {
         const reader = data.lobbyStreamReader;
+        if (!reader) {
+            throw Error("lobbyStreamReader is undefined");
+        }
         while (true) {
             const { done, value } = await reader.read();
             if (done) {
@@ -18,7 +25,13 @@
         }
     });
 
-    onDestroy(data.exitLobby);
+    onDestroy(() => {
+        const exitLobby = data.exitLobby;
+        if (!exitLobby) {
+            throw Error("tried to exit lobby but exitLobby is undefined");
+        }
+        exitLobby();
+    });
 
     let ready = false;
     function setReady() {
@@ -41,10 +54,10 @@
 </script>
 
 <div class="text-lg font-bold">
-    {data.gameData.size}x{data.gameData.size} game
+    {size}x{size} game
 </div>
 <div>
-    Minimum word length: {data.gameData.minLength}
+    Minimum word length: {minLength}
 </div>
 
 {#if playersReady === undefined}
