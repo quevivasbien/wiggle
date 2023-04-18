@@ -3,25 +3,21 @@
     import { onDestroy, onMount } from "svelte";
     import GamePreview from "./GamePreview.svelte";
     import { slide } from "svelte/transition";
+    import StyledButton from "$components/StyledButton.svelte";
 
-    let games: Record<string, GameData> = {};
+    export let data;
+
+    let games: Record<string, GameData>;
     $: gameIDs = games ? Object.keys(games) : [];
 
-    let reader: ReadableStreamDefaultReader;
-
     onMount(async () => {
-        // subscribe to a stream that gives the list of games
-        const response = await fetch("/api/games");
-        const stream = response.body;
-        if (!stream) {
-            throw new Error("No response body");
-        }
-        reader = stream.pipeThrough(new TextDecoderStream()).getReader();
         while (true) {
-            const { done, value } = await reader.read();
+            const { done, value } = await data.gamesReader.read();
             if (done) {
+                console.log("Received done signal from gamesReader");
                 break;
             }
+            console.log("Received games update: ", value);
             games = JSON.parse(value);
         }
 
@@ -29,30 +25,12 @@
 
     onDestroy(() => {
         // close the stream
-        reader.cancel();
+        data.gamesReader.cancel();
     });
 
     let showNewGameMenu = false;
     let size: number = 4;
     let minLength: number = 3;
-
-    function newGame() {
-        fetch(
-            "/api/games",
-            {
-                method: "POST",
-                body: JSON.stringify({ size, minLength }),
-                headers: {
-                    "Content-Type": "application/json"
-                },
-            }
-        ).then(
-            (response) => {
-                console.log("Created game & got response: ", response);
-            }
-        )
-    }
-
 
 </script>
 
@@ -60,6 +38,15 @@
     <div class="text-xl font-bold">
         Games
     </div>
+    {#if games === undefined}
+        <div class="text-xl m-2 italic">
+            Loading...
+        </div>
+    {:else if gameIDs.length === 0}
+        <div class="text-xl m-2 italic">
+            No games yet
+        </div>
+    {/if}
     <ol class="list-none list-inside">
         {#each gameIDs as gameID}
             <GamePreview id={gameID} game={games[gameID]} />
@@ -68,9 +55,11 @@
 </div>
 <div>
     {#if !showNewGameMenu}
-        <button class="w-1/3 mx-auto my-4 py-2 px-3 rounded-lg bg-white border-2 hover:border-blue-100 focus:bg-gray-100 drop-shadow" on:click={() => showNewGameMenu = true}>New game</button>
+        <StyledButton on:click={() => showNewGameMenu = true}>
+            New game
+        </StyledButton>
     {:else}
-        <form class="flex flex-col m-2 p-2 bg-gray-100 rounded-md" on:submit={(e) => { e.preventDefault(); newGame(); showNewGameMenu = false; }} transition:slide >
+        <form class="flex flex-col m-2 p-2 bg-gray-100 rounded-md" on:submit={(e) => { e.preventDefault(); data.newGame(size, minLength); showNewGameMenu = false; }} transition:slide >
             <label class="p-2" for="size">
                 <div class="p-3">
                     Board size:
@@ -93,7 +82,9 @@
                     </div>
                 </div>
             </label>
-            <button type="submit" class="w-1/3 mx-auto my-4 py-2 px-3 rounded-lg bg-white border-2 hover:border-blue-100 focus:bg-gray-100 drop-shadow">Create</button>
+            <StyledButton type="submit">
+                Create
+            </StyledButton>
         </form>
     {/if}
 </div>

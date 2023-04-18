@@ -1,24 +1,51 @@
 import { database } from '$server/database';
 
 import { MultiplayerGame, type GameData } from '$scripts/multiplayer';
-import { ref, onValue } from "firebase/database";
+import { ref, onValue, get, type Unsubscribe } from "firebase/database";
 import Board from '$scripts/board';
 
 let games: Record<string, GameData> = {};
 const gamesRef = ref(database, "games");
 
-export function GET() {
-    // get a list of all current games
+async function getGame(gameID: string) {
+    const gameRef = ref(database, `games/${gameID}`);
+    const snapshot = await get(gameRef);
+    if (!snapshot.exists()) {
+        throw new Error(`Game ${gameID} does not exist`);
+    }
+    return snapshot.val();
+}
+
+export async function GET({ url }) {
+    const gameID = url.searchParams.get("gameID");
+    if (gameID) {
+        const gameData = await getGame(gameID);
+        return new Response(JSON.stringify(gameData));
+    }
+    // subscribe to a list of all current games
+    let unsubscribe: Unsubscribe;
     const stream = new ReadableStream({
         start(controller) {
             // send the client the current games whenever the database changes
-            onValue(gamesRef, (snapshot) => {
+            unsubscribe = onValue(gamesRef, (snapshot) => {
                 games = snapshot.val();
-                controller.enqueue(JSON.stringify(games));
+                try {
+                    controller.enqueue(JSON.stringify(games));
+                }
+                catch (error) {
+                    console.error("When updating games stream: " + error);
+                }
             });
         },
         cancel() {
-            console.log("multiplayer stream cancelled");
+            if (unsubscribe) {
+                // unsubscribe from database updates
+                unsubscribe();
+            }
+            else {
+                console.error("games stream cancelled before it was started");
+            }
+            console.log("multiplayer stream cancelled successfully");
         },
     });
     return new Response(stream, {

@@ -49,6 +49,6 @@
     </form>
 {:else}
     <div transition:slide>
-        <Game size={size} minLength={minLength} on:newGame={() => playing = false} />
+        <Game size={size} minLength={minLength} />
     </div>
 {/if}

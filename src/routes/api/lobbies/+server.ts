@@ -1,19 +1,34 @@
-import { get, onValue, ref, set } from "firebase/database";
+import { get, onValue, ref, set, type Unsubscribe } from "firebase/database";
 import { database } from "$server/database";
 
-export async function GET({ request }) {
+export async function GET({ url }) {
     // subscribe to a stream of updates to a lobby
-    const { lobbyID } = await request.json();
+    const lobbyID = url.searchParams.get("lobbyID");
+    if (!lobbyID) {
+        return new Response("lobbyID param required", { status: 400 });
+    }
     const lobbyRef = ref(database, `lobbies/${lobbyID}`);
+    let unsubscribe: Unsubscribe;
     const stream = new ReadableStream({
         start(controller) {
-            onValue(lobbyRef, (snapshot) => {
+            unsubscribe = onValue(lobbyRef, (snapshot) => {
                 const playersReady = snapshot.val() || {};
-                controller.enqueue(JSON.stringify(playersReady));
+                try {
+                    controller.enqueue(JSON.stringify(playersReady));
+                }
+                catch (error) {
+                    console.error("When updating lobby stream: " + error);
+                }
             });
         },
         cancel() {
-            console.log("lobby stream cancelled");
+            if (unsubscribe) {
+                unsubscribe();
+            }
+            else {
+                console.error("lobby stream canceled before it was started");
+            }
+            console.log("lobby stream cancelled successfully");
         },
     });
     return new Response(stream, {
