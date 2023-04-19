@@ -6,7 +6,7 @@ export async function load(event: LoadEvent) {
     // get game info from database
     const gameResponse = await event.fetch(`/api/games?gameID=${lobbyID}`);
     if (!gameResponse.ok) {
-        return error(404, "Game not found");
+        throw error(404, "Game not found");
     };
     const gameData: GameData = await gameResponse.json();
     // generate user id
@@ -20,14 +20,17 @@ export async function load(event: LoadEvent) {
             action: "join",
         }),
     }).then((response) => {
-        console.log("Joined jobby and received response: ", response);
+        console.log("Joined lobby and received response: ", response);
     });
     // get a reader for the lobby stream
     // subscribe to stream
     const lobbyResponse = await event.fetch(`/api/lobbies?lobbyID=${lobbyID}`);
+    if (!lobbyResponse.ok) {
+        throw error(404, "No lobby found");
+    }
     const lobbyStream = lobbyResponse.body;
     if (!lobbyStream) {
-        throw new Error("No response body from lobby stream request");
+        throw error(500, "No response body from lobby stream request");
     }
     const lobbyStreamReader = lobbyStream.pipeThrough(new TextDecoderStream()).getReader();
 

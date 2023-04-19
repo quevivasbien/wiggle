@@ -1,6 +1,6 @@
 import { Database, get, ref, set } from 'firebase/database';
 
-import Board from '$scripts/board';
+import BoardData from '$scripts/board';
 import { loadWords } from '$scripts/utils';
 
 export interface GameData {
@@ -15,9 +15,9 @@ export interface GameData {
 
 export class MultiplayerGame {
     id: string;
-    board: Board;
+    board: BoardData;
 
-    private constructor(id: string, board: Board) {
+    private constructor(id: string, board: BoardData) {
         this.id = id;
         this.board = board;
     }
@@ -30,7 +30,7 @@ export class MultiplayerGame {
         }
         const gameData: GameData = snapshot.val();
         const words = loadWords(gameData.minLength);
-        const board = new Board(
+        const board = new BoardData(
             gameData.size,
             gameData.chars,
             gameData.minLength,
@@ -40,7 +40,7 @@ export class MultiplayerGame {
         return new MultiplayerGame(id, board);
     }
 
-    static async create(board: Board, database: Database): Promise<MultiplayerGame> {
+    static async create(board: BoardData, database: Database): Promise<MultiplayerGame> {
         // get a new unique id
         let id = '';
         do {

@@ -1,5 +1,5 @@
 import { get, onValue, ref, set, type Unsubscribe } from "firebase/database";
-import { database } from "$server/database";
+import { database, startGame } from "$server/database";
 
 export async function GET({ url }) {
     // subscribe to a stream of updates to a lobby
@@ -12,12 +12,14 @@ export async function GET({ url }) {
     const stream = new ReadableStream({
         start(controller) {
             unsubscribe = onValue(lobbyRef, (snapshot) => {
-                const playersReady = snapshot.val() || {};
-                try {
-                    controller.enqueue(JSON.stringify(playersReady));
+                const playersReady: Record<string, boolean> = snapshot.val();
+                if (!playersReady) {
+                    console.log("playersReady is null");
+                    return;
                 }
-                catch (error) {
-                    console.error("When updating lobby stream: " + error);
+                controller.enqueue(JSON.stringify(playersReady));
+                if (Object.keys(playersReady).length > 1 && Object.values(playersReady).every((ready) => ready)) {
+                    startGame(lobbyID);
                 }
             });
         },
@@ -52,7 +54,8 @@ async function setReady(lobbyID: string, userID: string) {
     await get(lobbyRef).then((snapshot) => {
         const playersReady = snapshot.val() || {};
         if (playersReady[userID] === undefined) {
-            throw new Error("user not in lobby");
+            console.log("When attempting to set ready status, user not in lobby");
+            return;
         }
         playersReady[userID] = true;
         set(lobbyRef, playersReady);
@@ -64,7 +67,8 @@ async function leaveLobby(lobbyID: string, userID: string) {
     await get(lobbyRef).then((snapshot) => {
         const playersReady = snapshot.val() || {};
         if (playersReady[userID] === undefined) {
-            throw new Error("user not in lobby");
+            console.log("When attempting to leave lobby, user not in lobby");
+            return;
         }
         delete playersReady[userID];
         set(lobbyRef, playersReady);

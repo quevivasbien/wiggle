@@ -2,7 +2,7 @@ import { database } from '$server/database';
 
 import { MultiplayerGame, type GameData } from '$scripts/multiplayer';
 import { ref, onValue, get, type Unsubscribe } from "firebase/database";
-import Board from '$scripts/board';
+import BoardData from '$scripts/board';
 
 let games: Record<string, GameData> = {};
 const gamesRef = ref(database, "games");
@@ -17,7 +17,7 @@ async function getGame(gameID: string) {
 }
 
 export async function GET({ url }) {
-    const gameID = url.searchParams.get("gameID");
+    const gameID = (url as URL).searchParams.get("gameID");
     if (gameID) {
         const gameData = await getGame(gameID);
         return new Response(JSON.stringify(gameData));
@@ -58,7 +58,7 @@ export async function GET({ url }) {
 export async function POST({ request }) {
     // create a new game
     const { size, minLength } = await request.json();
-    const board = Board.random(size, minLength);
+    const board = BoardData.random(size, minLength);
     MultiplayerGame.create(board, database);
     return new Response("ok");
 }

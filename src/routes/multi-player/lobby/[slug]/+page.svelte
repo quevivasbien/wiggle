@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { goto } from "$app/navigation";
     import { onMount, onDestroy } from "svelte";
 
     export let data;
@@ -8,6 +9,10 @@
     const { size, minLength } = data.gameData;
 
     let playersReady: Record<string, boolean>;
+    $: readyToStart = playersReady && Object.keys(playersReady).length > 1 && Object.values(playersReady).every((ready) => ready);
+    $: if (readyToStart) {
+        setTimeout(startGame, 1000);
+    }
 
     onMount(async () => {
         const reader = data.lobbyStreamReader;
@@ -51,6 +56,10 @@
         ready = true;
     }
 
+    function startGame() {
+        goto(`/multi-player/game/${data.lobbyID}/${data.myID}`);
+    }
+
 </script>
 
 <div class="text-lg font-bold">
@@ -61,18 +70,25 @@
 </div>
 
 {#if playersReady === undefined}
-    Loading lobby...
+    <div class="text-xl italic">
+        Loading lobby...
+    </div>
 {/if}
 {#if playersReady}
-{#each Object.keys(playersReady).reverse() as idx, i}
-    {#if idx === data.myID}
-        <div>
-            Player {i + 1} (you): <label><input type="checkbox" bind:checked={ready} on:change={setReady} disabled={ready}> {ready ? "Ready" : "Not ready"}</label>
-        </div>
-    {:else}
-        <div>
-            Player {i + 1}: {playersReady[idx] ? "Ready" : "Not ready"}
+    {#each Object.keys(playersReady).reverse() as idx, i}
+        {#if idx === data.myID}
+            <div>
+                Player {i + 1} (you): <label><input type="checkbox" bind:checked={ready} on:change={setReady} disabled={ready}> {ready ? "Ready" : "Not ready"}</label>
+            </div>
+        {:else}
+            <div>
+                Player {i + 1}: {playersReady[idx] ? "Ready" : "Not ready"}
+            </div>
+        {/if}
+    {/each}
+    {#if readyToStart }
+        <div class="m-2 p-2 italic">
+            All players are ready! Starting game...
         </div>
     {/if}
-{/each}
 {/if}

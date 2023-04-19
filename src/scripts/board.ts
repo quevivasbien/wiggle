@@ -1,29 +1,29 @@
 import { loadWords, CharDist } from "$scripts/utils";
 
-export default class Board {
+export default class BoardData {
     size: number;
     chars: string;
     minLength: number;
     words: string[];
 
-    constructor(size: number, chars: string, minLength: number, words: string[]) {
+    constructor(size: number, chars: string, minLength: number, words?: string[]) {
         if (chars.length !== size * size) {
             throw new Error('Board size does not match number of characters');
         }
         this.size = size;
         this.chars = chars;
         this.minLength = minLength;
-        this.words = words;
+        this.words = words ?? loadWords(minLength);
     }
 
-    static random(size: number, minLength: number): Board {
+    static random(size: number, minLength: number): BoardData {
         const words = loadWords(minLength);
         const charDist = CharDist.fromWords(words);
         const chars = [];
         for (let i = 0; i < size * size; i++) {
             chars.push(charDist.sample());
         }
-        return new Board(size, chars.join(''), minLength, words);
+        return new BoardData(size, chars.join(''), minLength, words);
     }
 
     getRow(y: number): string {

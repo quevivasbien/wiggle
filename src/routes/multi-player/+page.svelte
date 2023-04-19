@@ -1,4 +1,8 @@
 <script lang="ts">
+    // disable pre-loading
+    import { setContext } from "svelte";
+    setContext("preload", null);
+
     import type { GameData } from "$scripts/multiplayer";
     import { onDestroy, onMount } from "svelte";
     import GamePreview from "./GamePreview.svelte";
@@ -6,7 +10,6 @@
     import StyledButton from "$components/StyledButton.svelte";
 
     export let data;
-    console.log("Games page data: ", data);
 
     let games: Record<string, GameData>;
     $: gameIDs = games ? Object.keys(games) : [];
@@ -37,7 +40,7 @@
 
 <div>
     <div class="text-xl font-bold">
-        Games
+        Game lobbies
     </div>
     {#if games === undefined}
         <div class="text-xl m-2 italic">
@@ -45,7 +48,7 @@
         </div>
     {:else if gameIDs.length === 0}
         <div class="text-xl m-2 italic">
-            No games yet
+            No active lobbies
         </div>
     {/if}
     <ol class="list-none list-inside">
@@ -57,7 +60,7 @@
 <div>
     {#if !showNewGameMenu}
         <StyledButton onclick={() => showNewGameMenu = true}>
-            New game
+            Create lobby
         </StyledButton>
     {:else}
         <form class="flex flex-col m-2 p-2 bg-gray-100 rounded-md" on:submit={(e) => { e.preventDefault(); data.newGame(size, minLength); showNewGameMenu = false; }} transition:slide >

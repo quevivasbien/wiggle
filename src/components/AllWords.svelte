@@ -1,9 +1,9 @@
 <script lang="ts">
     import { onMount } from "svelte";
-    import type Board from "$scripts/board";
+    import type BoardData from "$scripts/board";
     import { fade } from "svelte/transition";
 
-    export let board: Board;
+    export let board: BoardData;
     export let wordsFound: string[];
     export let unravelTime: number = 3000;
     export let nDisplayColumns: number = 3;
