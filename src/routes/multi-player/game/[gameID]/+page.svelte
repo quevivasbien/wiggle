@@ -3,6 +3,9 @@
     import Board from '$components/Board.svelte';
     import { onMount, onDestroy } from 'svelte';
     import BoardData from '$scripts/board';
+    import { myID } from '$data/stores';
+
+    console.log("my id is " + $myID);
 
     interface GameData {
         chars: string;
@@ -14,7 +17,6 @@
 
     interface PageData {
         gameID: string;
-        myID: string;
         gameData: GameData;
         wordsFoundStreamReader: ReadableStreamDefaultReader<string>;
         submitWord: (word: string) => Promise<boolean>;
@@ -22,7 +24,7 @@
     }
 
     export let data: PageData;
-    const { gameID, myID, gameData, wordsFoundStreamReader, submitWord, quit } = data;
+    const { gameID, gameData, wordsFoundStreamReader, submitWord, quit } = data;
 
     let board: BoardData;
     let wordsFound: Record<string, string[]>;
@@ -53,7 +55,7 @@
         word = word.toLowerCase();
         for (const player in wordsFound) {
             if (wordsFound[player].includes(word)) {
-                if (player === myID) {
+                if (player === $myID) {
                     return 'Word already found';
                 }
                 else {
@@ -80,10 +82,10 @@
 Words found:
 <div class="flex flex-row justify-center">
     {#each gameData.players as player, i}
-        <div class="flex flex-col basis-40 p-2 m-2 rounded-md {player === myID ? 'drop-shadow bg-gray-100' : ''}">
+        <div class="flex flex-col basis-40 p-2 m-2 rounded-md {player === $myID ? 'drop-shadow bg-gray-100' : ''}">
             <div class="p-3">
                 <div class="text-xl pt-1">Player {i+1}</div>
-                {#if player === myID}
+                {#if player === $myID}
                     <div class="text-sm">(you)</div>
                 {/if}
                 <div>

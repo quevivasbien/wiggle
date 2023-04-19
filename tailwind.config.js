@@ -5,7 +5,11 @@ export default {
     extend: {
       fontFamily: {
         serif: ['Source Serif Pro', 'serif'],
+        sans: ['Source Sans Pro', 'sans-serif'],
       },
+      fontSize: {
+        'normal': '2rem',
+      }
     },
   },
   plugins: [],

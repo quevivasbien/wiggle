@@ -1,4 +1,7 @@
-export async function load(event) {
+import { goto } from "$app/navigation";
+import type { LoadEvent } from "@sveltejs/kit";
+
+export async function load(event: LoadEvent) {
     // subscribe to games state updates
     const response = await event.fetch("/api/games");
     const gamesStream = response.body;
@@ -7,8 +10,8 @@ export async function load(event) {
     }
     const gamesReader = gamesStream.pipeThrough(new TextDecoderStream()).getReader();
 
-    const newGame = (size: number, minLength: number) => {
-        event.fetch(
+    const newGame = async (size: number, minLength: number) => {
+        const response = await event.fetch(
             "/api/games",
             {
                 method: "POST",
@@ -17,11 +20,10 @@ export async function load(event) {
                     "Content-Type": "application/json"
                 },
             }
-        ).then(
-            (response) => {
-                console.log("Created game & got response: ", response);
-            }
-        )
+        );
+        const gameID = await response.text();
+        // join the new lobby
+        goto(`/multi-player/lobby/${gameID}`);
     }
 
     return {

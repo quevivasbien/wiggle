@@ -36,6 +36,13 @@
     let size: number = 4;
     let minLength: number = 3;
 
+    let creatingGame = false;
+    function createGame(e: Event) {
+        e.preventDefault();
+        creatingGame = true;
+        data.newGame(size, minLength);
+    }
+
 </script>
 
 <div>
@@ -57,38 +64,52 @@
         {/each}
     </ol>
 </div>
-<div>
+<div class="flex flex-col">
     {#if !showNewGameMenu}
         <StyledButton onclick={() => showNewGameMenu = true}>
             Create lobby
         </StyledButton>
     {:else}
-        <form class="flex flex-col m-2 p-2 bg-gray-100 rounded-md" on:submit={(e) => { e.preventDefault(); data.newGame(size, minLength); showNewGameMenu = false; }} transition:slide >
-            <label class="p-2" for="size">
-                <div class="p-3">
-                    Board size:
-                </div>
-                <div class="flex flex-row justify-center">
-                    <input class="w-1/3 accent-gray-500" type="range" min="3" max="6" bind:value={size} />
-                    <div class="px-3">
-                        {size} x {size}
+        {#if creatingGame}
+            <div class="text-xl m-2 italic">
+                Creating lobby...
+            </div>
+        {:else}
+            <form class="flex flex-col m-2 p-2 bg-gray-100 rounded-md" on:submit={(e) => createGame(e)} transition:slide >
+                <label class="p-2" for="size">
+                    <div class="p-3">
+                        Board size:
                     </div>
-                </div>
-            </label>
-            <label class="p-2" for="minLength">
-                <div class="p-3">
-                    Minimum word length:
-                </div>
-                <div class="flex flex-row justify-center">
-                    <input class="w-1/3 accent-gray-500" type="range" min="3" max="5" bind:value={minLength} />
-                    <div class="px-3">
-                        {minLength}
+                    <div class="flex flex-row justify-center">
+                        <input class="w-1/3 accent-gray-500" type="range" min="3" max="6" bind:value={size} />
+                        <div class="px-3">
+                            {size} x {size}
+                        </div>
                     </div>
+                </label>
+                <label class="p-2" for="minLength">
+                    <div class="p-3">
+                        Minimum word length:
+                    </div>
+                    <div class="flex flex-row justify-center">
+                        <input class="w-1/3 accent-gray-500" type="range" min="3" max="5" bind:value={minLength} />
+                        <div class="px-3">
+                            {minLength}
+                        </div>
+                    </div>
+                </label>
+                <div class="flex-row">
+                    <StyledButton onclick={() => showNewGameMenu = false}>
+                        Cancel
+                    </StyledButton>
+                    <StyledButton type="submit">
+                        Create & join
+                    </StyledButton>
                 </div>
-            </label>
-            <StyledButton type="submit">
-                Create
-            </StyledButton>
-        </form>
+            </form>
+        {/if}
     {/if}
+
+    <StyledButton href="/">Back to home</StyledButton>
+
 </div>

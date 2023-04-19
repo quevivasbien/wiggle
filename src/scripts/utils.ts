@@ -47,3 +47,7 @@ export function compressQu(word: string) {
 export function expandQu(word: string) {
     return word.replace('q', 'qu');
 }
+
+export function newRandomID() {
+    return Math.random().toString(36).substring(2, 15);
+}

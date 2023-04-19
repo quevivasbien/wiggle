@@ -1,6 +1,7 @@
 <script lang="ts">
     import { goto } from "$app/navigation";
     import { onMount, onDestroy } from "svelte";
+    import { myID } from "$data/stores";
 
     export let data;
     if (!data.gameData) {
@@ -9,7 +10,8 @@
     const { size, minLength } = data.gameData;
 
     let playersReady: Record<string, boolean>;
-    $: readyToStart = playersReady && Object.keys(playersReady).length > 1 && Object.values(playersReady).every((ready) => ready);
+    $: allPlayersReady = playersReady && Object.values(playersReady).every((ready) => ready);
+    $: readyToStart = allPlayersReady && Object.keys(playersReady).length > 1;
     $: if (readyToStart) {
         setTimeout(startGame, 1000);
     }
@@ -47,7 +49,7 @@
         fetch("/api/lobbies", {
             method: "POST",
             body: JSON.stringify({
-                userID: data.myID,
+                userID: $myID,
                 lobbyID: data.lobbyID,
                 action: "ready",
             }),
@@ -57,7 +59,7 @@
     }
 
     function startGame() {
-        goto(`/multi-player/game/${data.lobbyID}/${data.myID}`);
+        goto(`/multi-player/game/${data.lobbyID}`);
     }
 
 </script>
@@ -75,17 +77,34 @@
     </div>
 {/if}
 {#if playersReady}
-    {#each Object.keys(playersReady).reverse() as idx, i}
-        {#if idx === data.myID}
-            <div>
-                Player {i + 1} (you): <label><input type="checkbox" bind:checked={ready} on:change={setReady} disabled={ready}> {ready ? "Ready" : "Not ready"}</label>
+    <div class="flex flex-col p-2 m-2 border border-gray-300">
+        {#each Object.keys(playersReady).reverse() as idx, i}
+            <div class="flex flex-row space-x-4 justify-center">
+                {#if idx === $myID}
+                    <div>
+                        Player {i + 1} (you):
+                    </div>
+                    <div>
+                        <label><input type="checkbox" bind:checked={ready} on:change={setReady} disabled={ready}> {ready ? "Ready" : "Not ready"}</label>
+                    </div>
+                {:else}
+                    <div>
+                        Player {i + 1}:
+                    </div>
+                    <div>
+                        {playersReady[idx] ? "Ready" : "Not ready"}
+                    </div>
+                {/if}
             </div>
-        {:else}
-            <div>
-                Player {i + 1}: {playersReady[idx] ? "Ready" : "Not ready"}
-            </div>
-        {/if}
-    {/each}
+        {/each}
+    </div>
+    
+    
+    {#if allPlayersReady && !readyToStart }
+        <div class="m-2 p-2 italic">
+            Waiting for at least one more player...
+        </div>
+    {/if}
     {#if readyToStart }
         <div class="m-2 p-2 italic">
             All players are ready! Starting game...

@@ -1,7 +1,7 @@
 import { Database, get, ref, set } from 'firebase/database';
 
-import BoardData from '$scripts/board';
-import { loadWords } from '$scripts/utils';
+import type BoardData from '$scripts/board';
+import { newRandomID } from '$scripts/utils';
 
 export interface GameData {
     // information about the board
@@ -22,29 +22,11 @@ export class MultiplayerGame {
         this.board = board;
     }
 
-    static async join(id: string, database: Database): Promise<MultiplayerGame> {
-        const gameRef = ref(database, `games/${id}`);
-        const snapshot = await get(gameRef);
-        if (!snapshot.exists()) {
-            throw new Error(`Game ${id} does not exist`);
-        }
-        const gameData: GameData = snapshot.val();
-        const words = loadWords(gameData.minLength);
-        const board = new BoardData(
-            gameData.size,
-            gameData.chars,
-            gameData.minLength,
-            words,
-        );
-
-        return new MultiplayerGame(id, board);
-    }
-
     static async create(board: BoardData, database: Database): Promise<MultiplayerGame> {
         // get a new unique id
         let id = '';
         do {
-            id = newRandomId();
+            id = newRandomID();
         } while ((await get(ref(database, 'games/' + id))).exists());
         // add the game to the database
         const gameRef = ref(database, 'games/' + id);
@@ -57,8 +39,4 @@ export class MultiplayerGame {
         await set(gameRef, gameData);
         return new MultiplayerGame(id, board);
     }
-}
-
-export function newRandomId() {
-    return Math.random().toString(36).substring(2, 15);
 }

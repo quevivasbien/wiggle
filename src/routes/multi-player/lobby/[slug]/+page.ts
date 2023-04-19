@@ -1,21 +1,24 @@
-import { error, type LoadEvent } from '@sveltejs/kit';
-import { newRandomId, type GameData } from '$scripts/multiplayer.js';
+import { error, redirect, type LoadEvent } from '@sveltejs/kit';
+import { get } from 'svelte/store';
+import type { GameData } from '$scripts/multiplayer.js';
+import { myID } from "$data/stores";
+
+const myIDValue = get(myID);
 
 export async function load(event: LoadEvent) {
     const lobbyID = event.params.slug;
     // get game info from database
     const gameResponse = await event.fetch(`/api/games?gameID=${lobbyID}`);
     if (!gameResponse.ok) {
-        throw error(404, "Lobby not found");
+        // redirect to game page
+        throw redirect(301, "/multi-player");
     };
     const gameData: GameData = await gameResponse.json();
-    // generate user id
-    const myID = newRandomId();
     // join the lobby
     await event.fetch(`/api/lobbies`, {
         method: "POST",
         body: JSON.stringify({
-            userID: myID,
+            userID: myIDValue,
             lobbyID: lobbyID,
             action: "join",
         }),
@@ -39,7 +42,7 @@ export async function load(event: LoadEvent) {
         event.fetch("/api/lobbies", {
             method: "POST",
             body: JSON.stringify(({
-                userID: myID,
+                userID: myIDValue,
                 lobbyID: lobbyID,
                 action: "leave",
             }))
@@ -50,7 +53,6 @@ export async function load(event: LoadEvent) {
 
     return {
         lobbyID,
-        myID,
         gameData,
         lobbyStreamReader,
         exitLobby,

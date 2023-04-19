@@ -60,9 +60,9 @@ export async function GET({ url }) {
 }
 
 export async function POST({ request }) {
-    // create a new game
+    // create a new game, return game id
     const { size, minLength } = await request.json();
     const board = BoardData.random(size, minLength);
-    MultiplayerGame.create(board, database);
-    return new Response("ok");
+    const game = await MultiplayerGame.create(board, database);
+    return new Response(game.id);
 }
