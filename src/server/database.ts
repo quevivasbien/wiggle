@@ -1,4 +1,4 @@
-import { env } from "$env/dynamic/private";
+import { DATABASE_URL } from "$env/static/private";
 
 import { initializeApp, type FirebaseOptions } from 'firebase/app';
 import { get, getDatabase, ref, set } from 'firebase/database';
@@ -9,7 +9,7 @@ function setupDatabase(firebaseConfig: FirebaseOptions) {
 }
 
 const firebaseConfig = {
-    databaseURL: env.DATABASE_URL,
+    databaseURL: DATABASE_URL,
 };
 
 export const database = setupDatabase(firebaseConfig);

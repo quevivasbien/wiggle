@@ -39,6 +39,10 @@
     let creatingGame = false;
     function createGame(e: Event) {
         e.preventDefault();
+        if (!showNewGameMenu) {
+            // this is so the form doesn't submit when cancelling
+            return;
+        }
         creatingGame = true;
         data.newGame(size, minLength);
     }
