@@ -1,4 +1,4 @@
-import { get, onValue, ref, set, type Unsubscribe } from 'firebase/database';
+import { get, onValue, ref, remove, set, type Unsubscribe } from 'firebase/database';
 
 import { database } from '$server/database.js';
 
@@ -82,5 +82,33 @@ export async function POST({ url }) {
     console.log(wordsFound);
     wordsFound[playerID] = [...wordsFound[playerID] ?? [], word];
     set(wordsFoundRef, wordsFound);
+    return new Response('ok');
+}
+
+export async function DELETE({ url }) {
+    // quit the game
+    const gameID = url.searchParams.get('gameID');
+    if (!gameID) {
+        return new Response('gameID param required', { status: 400 });
+    }
+    const playerID = url.searchParams.get('playerID');
+    if (!playerID) {
+        return new Response('playerID param required', { status: 400 });
+    }
+    const playersRef = ref(database, `activeGames/${gameID}/players`);
+    const players: string[] = (await get(playersRef)).val() ?? [];
+    const index = players.indexOf(playerID);
+    // remove the player from the list of players
+    if (index > -1) {
+        players.splice(index, 1);
+        set(playersRef, players);
+        console.log("Player", playerID, "removed from game", gameID);
+    }
+    // if there are no more players, delete the game
+    if (players.length === 0) {
+        const gameRef = ref(database, `activeGames/${gameID}`);
+        await remove(gameRef);
+        console.log("Game", gameID, "deleted");
+    }
     return new Response('ok');
 }

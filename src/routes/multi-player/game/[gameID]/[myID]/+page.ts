@@ -24,11 +24,18 @@ export async function load(event: LoadEvent) {
         return true;
     }
 
+    const quit = () => {
+        // disconnect from the stream & tell the server you've quit
+        wordsFoundStreamReader.cancel();
+        event.fetch(`/api/active-game?gameID=${gameID}&playerID=${myID}`, { method: "DELETE" })
+    }
+
     return {
         gameID,
         myID,
         gameData,
         wordsFoundStreamReader,
         submitWord,
+        quit,
     };
 }

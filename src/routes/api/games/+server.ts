@@ -11,7 +11,8 @@ async function getGame(gameID: string) {
     const gameRef = ref(database, `games/${gameID}`);
     const snapshot = await get(gameRef);
     if (!snapshot.exists()) {
-        throw new Error(`Game ${gameID} does not exist`);
+        console.log(`When fetching game info, game ${gameID} does not exist`);
+        return null;
     }
     return snapshot.val();
 }
@@ -20,6 +21,9 @@ export async function GET({ url }) {
     const gameID = (url as URL).searchParams.get("gameID");
     if (gameID) {
         const gameData = await getGame(gameID);
+        if (!gameData) {
+            return new Response("Game not found", { status: 404 });
+        }
         return new Response(JSON.stringify(gameData));
     }
     // subscribe to a list of all current games

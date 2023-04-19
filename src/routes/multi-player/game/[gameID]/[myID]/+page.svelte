@@ -18,10 +18,11 @@
         gameData: GameData;
         wordsFoundStreamReader: ReadableStreamDefaultReader<string>;
         submitWord: (word: string) => Promise<boolean>;
+        quit: () => void;
     }
 
     export let data: PageData;
-    const { gameID, myID, gameData, wordsFoundStreamReader, submitWord } = data;
+    const { gameID, myID, gameData, wordsFoundStreamReader, submitWord, quit } = data;
 
     let board: BoardData;
     let wordsFound: Record<string, string[]>;
@@ -42,9 +43,7 @@
         }
     });
 
-    onDestroy(() => {
-        wordsFoundStreamReader.cancel();
-    });
+    onDestroy(quit);
 
     let showAllWords = false;
 
@@ -82,7 +81,15 @@ Words found:
 <div class="flex flex-row justify-center">
     {#each gameData.players as player, i}
         <div class="flex flex-col basis-40 p-2 m-2 rounded-md {player === myID ? 'drop-shadow bg-gray-100' : ''}">
-            <div class="text-xl p-3">Player {i+1}{player === myID ? " (you)": ""}</div>
+            <div class="p-3">
+                <div class="text-xl pt-1">Player {i+1}</div>
+                {#if player === myID}
+                    <div class="text-sm">(you)</div>
+                {/if}
+                <div>
+                    {(wordsFound[player] ?? []).length} words
+                </div>
+            </div>
             {#each (wordsFound[player] ?? []) as word}
                 <div class="mr-2 m-1 p-2 rounded-md bg-gray-300">{word}</div>
             {/each}

@@ -6,7 +6,7 @@ export async function load(event: LoadEvent) {
     // get game info from database
     const gameResponse = await event.fetch(`/api/games?gameID=${lobbyID}`);
     if (!gameResponse.ok) {
-        throw error(404, "Game not found");
+        throw error(404, "Lobby not found");
     };
     const gameData: GameData = await gameResponse.json();
     // generate user id
