@@ -1,13 +1,10 @@
-import { get, onValue, ref, remove, set, type Unsubscribe } from 'firebase/database';
-
 import { database } from '$server/database.js';
 
 function subscribeToStream(gameID: string) {
-    const wordsFoundRef = ref(database, `activeGames/${gameID}/wordsFound`);
-    let unsubscribe: Unsubscribe;
+    const wordsFoundRef = database.ref(`activeGames/${gameID}/wordsFound`);
     const stream = new ReadableStream({
         start(controller) {
-            unsubscribe = onValue(wordsFoundRef, (snapshot) => {
+            wordsFoundRef.on("value", (snapshot) => {
                 const wordsFound = snapshot.val() ?? {};
                 if (!wordsFound) {
                     console.log('wordsFound is null');
@@ -18,12 +15,7 @@ function subscribeToStream(gameID: string) {
             });
         },
         cancel() {
-            if (unsubscribe) {
-                unsubscribe();
-            }
-            else {
-                console.error('active game stream canceled before it was started');
-            }
+            wordsFoundRef.off("value");
             console.log('active game stream cancelled successfully');
         },
     });
@@ -48,8 +40,8 @@ export async function GET({ url }) {
         return subscribeToStream(gameID);
     }
     // o.w. return the game info
-    const gameRef = ref(database, `activeGames/${gameID}`);
-    const gameData = (await get(gameRef)).val();
+    const gameRef = database.ref(`activeGames/${gameID}`);
+    const gameData = (await gameRef.get()).val();
     return new Response(JSON.stringify(gameData));
 }
 
@@ -69,8 +61,8 @@ export async function POST({ url }) {
     }
     console.log("Checking word", word);
     // check if the word has already been found
-    const wordsFoundRef = ref(database, `activeGames/${gameID}/wordsFound`);
-    const wordsFound = (await get(wordsFoundRef)).val() ?? {};
+    const wordsFoundRef = database.ref(`activeGames/${gameID}/wordsFound`);
+    const wordsFound = (await wordsFoundRef.get()).val() ?? {};
     if (wordsFound) {
         for (const player in wordsFound) {
             if (wordsFound[player].includes(word)) {
@@ -81,7 +73,7 @@ export async function POST({ url }) {
     // if not already found, add it to the list of words found
     console.log(wordsFound);
     wordsFound[playerID] = [...wordsFound[playerID] ?? [], word];
-    set(wordsFoundRef, wordsFound);
+    wordsFoundRef.set(wordsFound);
     return new Response('ok');
 }
 
@@ -95,19 +87,19 @@ export async function DELETE({ url }) {
     if (!playerID) {
         return new Response('playerID param required', { status: 400 });
     }
-    const playersRef = ref(database, `activeGames/${gameID}/players`);
-    const players: string[] = (await get(playersRef)).val() ?? [];
+    const playersRef = database.ref(`activeGames/${gameID}/players`);
+    const players: string[] = (await playersRef.get()).val() ?? [];
     const index = players.indexOf(playerID);
     // remove the player from the list of players
     if (index > -1) {
         players.splice(index, 1);
-        set(playersRef, players);
+        playersRef.set(players);
         console.log("Player", playerID, "removed from game", gameID);
     }
     // if there are no more players, delete the game
     if (players.length === 0) {
-        const gameRef = ref(database, `activeGames/${gameID}`);
-        await remove(gameRef);
+        const gameRef = database.ref(`activeGames/${gameID}`);
+        await gameRef.remove();
         console.log("Game", gameID, "deleted");
     }
     return new Response('ok');

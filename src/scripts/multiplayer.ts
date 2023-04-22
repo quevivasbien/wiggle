@@ -1,4 +1,4 @@
-import { Database, get, ref, set } from 'firebase/database';
+import type { Database } from "firebase-admin/database";
 
 import type BoardData from '$scripts/board';
 import { newRandomID } from '$scripts/utils';
@@ -27,16 +27,16 @@ export class MultiplayerGame {
         let id = '';
         do {
             id = newRandomID();
-        } while ((await get(ref(database, 'games/' + id))).exists());
+        } while ((await database.ref('games/' + id).get()).exists());
         // add the game to the database
-        const gameRef = ref(database, 'games/' + id);
+        const gameRef = database.ref('games/' + id);
         const gameData: GameData = {
             size: board.size,
             chars: board.chars,
             minLength: board.minLength,
             wordsFound: [],
         };
-        await set(gameRef, gameData);
+        await gameRef.set(gameData);
         return new MultiplayerGame(id, board);
     }
 }

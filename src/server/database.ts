@@ -1,45 +1,42 @@
-import { DATABASE_URL } from "$env/static/private";
+import { DATABASE_URL, SERVICE_ACCOUNT } from "$env/static/private";
 
-import { initializeApp, type FirebaseOptions } from 'firebase/app';
-import { get, getDatabase, ref, set } from 'firebase/database';
+import { credential, initializeApp } from "firebase-admin";
 
-function setupDatabase(firebaseConfig: FirebaseOptions) {
-    const app = initializeApp(firebaseConfig);
-    return getDatabase(app);
-}
+const serviceAccount = JSON.parse(SERVICE_ACCOUNT);
 
-const firebaseConfig = {
+const app = initializeApp({
+    credential: credential.cert(serviceAccount),
     databaseURL: DATABASE_URL,
-};
+});
 
-export const database = setupDatabase(firebaseConfig);
+export const database = app.database();
 
 export async function startGame(gameID: string) {
     console.log("starting game", gameID);
     // remove the lobby from lobbies list & save list of players
-    const lobbyRef = ref(database, `lobbies/${gameID}`);
-    const lobbySnapshot = await get(lobbyRef);
+    const lobbyRef = database.ref(`lobbies/${gameID}`);
+    const lobbySnapshot = await lobbyRef.get();
     const playersReady = lobbySnapshot.val();
     if (!playersReady) {
         console.log("no players in lobby when attempting to start game");
         return;
     }
-    set(lobbyRef, null);
+    lobbyRef.set(null);
     const players = Object.keys(playersReady);
     // remove the game from the games list, save gamedata
-    const gameRef = ref(database, `games/${gameID}`);
-    const gameSnapshot = await get(gameRef);
+    const gameRef = database.ref(`games/${gameID}`);
+    const gameSnapshot = await gameRef.get();
     const gameData = gameSnapshot.val();
     if (!gameData) {
         console.log("no game data when attempting to start game");
         return;
     }
-    set(gameRef, null);
+    gameRef.set(null);
     // add game to active games database
-    const activeGameRef = ref(database, `activeGames/${gameID}`);
-    set(activeGameRef, {
+    const activeGameRef = database.ref(`activeGames/${gameID}`);
+    activeGameRef.set({
         ...gameData,
         players,
         // wordsFound: {},
-    })
+    });
 }

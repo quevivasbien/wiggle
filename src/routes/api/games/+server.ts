@@ -5,11 +5,11 @@ import { ref, onValue, get, type Unsubscribe } from "firebase/database";
 import BoardData from '$scripts/board';
 
 let games: Record<string, GameData> = {};
-const gamesRef = ref(database, "games");
+const gamesRef = database.ref("games");
 
 async function getGame(gameID: string) {
-    const gameRef = ref(database, `games/${gameID}`);
-    const snapshot = await get(gameRef);
+    const gameRef = database.ref(`games/${gameID}`);
+    const snapshot = await gameRef.get();
     if (!snapshot.exists()) {
         console.log(`When fetching game info, game ${gameID} does not exist`);
         return null;
@@ -27,11 +27,10 @@ export async function GET({ url }) {
         return new Response(JSON.stringify(gameData));
     }
     // subscribe to a list of all current games
-    let unsubscribe: Unsubscribe;
     const stream = new ReadableStream({
         start(controller) {
             // send the client the current games whenever the database changes
-            unsubscribe = onValue(gamesRef, (snapshot) => {
+            gamesRef.on("value", (snapshot) => {
                 games = snapshot.val();
                 try {
                     controller.enqueue(JSON.stringify(games));
@@ -42,13 +41,7 @@ export async function GET({ url }) {
             });
         },
         cancel() {
-            if (unsubscribe) {
-                // unsubscribe from database updates
-                unsubscribe();
-            }
-            else {
-                console.error("games stream cancelled before it was started");
-            }
+            gamesRef.off("value");
             console.log("multiplayer stream cancelled successfully");
         },
     });

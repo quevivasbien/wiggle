@@ -1,4 +1,3 @@
-import { get, onValue, ref, set, type Unsubscribe } from "firebase/database";
 import { database, startGame } from "$server/database";
 
 export async function GET({ url }) {
@@ -7,11 +6,10 @@ export async function GET({ url }) {
     if (!lobbyID) {
         return new Response("lobbyID param required", { status: 400 });
     }
-    const lobbyRef = ref(database, `lobbies/${lobbyID}`);
-    let unsubscribe: Unsubscribe;
+    const lobbyRef = database.ref(`lobbies/${lobbyID}`);
     const stream = new ReadableStream({
         start(controller) {
-            unsubscribe = onValue(lobbyRef, (snapshot) => {
+            lobbyRef.on("value", (snapshot) => {
                 const playersReady: Record<string, boolean> = snapshot.val();
                 if (!playersReady) {
                     console.log("playersReady is null");
@@ -24,12 +22,8 @@ export async function GET({ url }) {
             });
         },
         cancel() {
-            if (unsubscribe) {
-                unsubscribe();
-            }
-            else {
-                console.error("lobby stream canceled before it was started");
-            }
+            // remove callback to lobbyRef
+            lobbyRef.off("value");
             console.log("lobby stream cancelled successfully");
         },
     });
@@ -41,37 +35,37 @@ export async function GET({ url }) {
 }
 
 async function joinLobby(lobbyID: string, userID: string) {
-    const lobbyRef = ref(database, `lobbies/${lobbyID}`);
-    await get(lobbyRef).then((snapshot) => {
+    const lobbyRef = database.ref(`lobbies/${lobbyID}`);
+    await lobbyRef.get().then((snapshot) => {
         const playersReady = snapshot.val() || {};
         playersReady[userID] = false;
-        set(lobbyRef, playersReady);
+        lobbyRef.set(playersReady);
     });
 }
 
 async function setReady(lobbyID: string, userID: string) {
-    const lobbyRef = ref(database, `lobbies/${lobbyID}`);
-    await get(lobbyRef).then((snapshot) => {
+    const lobbyRef = database.ref(`lobbies/${lobbyID}`);
+    await lobbyRef.get().then((snapshot) => {
         const playersReady = snapshot.val() || {};
         if (playersReady[userID] === undefined) {
             console.log("When attempting to set ready status, user not in lobby");
             return;
         }
         playersReady[userID] = true;
-        set(lobbyRef, playersReady);
+        lobbyRef.set(playersReady);
     });
 }
 
 async function leaveLobby(lobbyID: string, userID: string) {
-    const lobbyRef = ref(database, `lobbies/${lobbyID}`);
-    await get(lobbyRef).then((snapshot) => {
+    const lobbyRef = database.ref(`lobbies/${lobbyID}`);
+    await lobbyRef.get().then((snapshot) => {
         const playersReady = snapshot.val() || {};
         if (playersReady[userID] === undefined) {
             console.log("When attempting to leave lobby, user not in lobby");
             return;
         }
         delete playersReady[userID];
-        set(lobbyRef, playersReady);
+        lobbyRef.set(playersReady);
     });
 }
 
