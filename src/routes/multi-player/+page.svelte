@@ -8,6 +8,7 @@
     import GamePreview from "./GamePreview.svelte";
     import { slide } from "svelte/transition";
     import StyledButton from "$components/StyledButton.svelte";
+    import { base } from "$app/paths";
 
     export let data;
 
@@ -114,6 +115,6 @@
         {/if}
     {/if}
 
-    <StyledButton href="/">Back to home</StyledButton>
+    <StyledButton href="{base}/">Back to home</StyledButton>
 
 </div>

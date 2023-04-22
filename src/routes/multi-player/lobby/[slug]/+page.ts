@@ -2,20 +2,21 @@ import { error, redirect, type LoadEvent } from '@sveltejs/kit';
 import { get } from 'svelte/store';
 import type { GameData } from '$scripts/multiplayer.js';
 import { myID } from "$data/stores";
+import { base } from '$app/paths';
 
 const myIDValue = get(myID);
 
 export async function load(event: LoadEvent) {
     const lobbyID = event.params.slug;
     // get game info from database
-    const gameResponse = await event.fetch(`/api/games?gameID=${lobbyID}`);
+    const gameResponse = await event.fetch(`${base}/api/games?gameID=${lobbyID}`);
     if (!gameResponse.ok) {
         // redirect to game page
-        throw redirect(301, "/multi-player");
+        throw redirect(301, `${base}/multi-player`);
     };
     const gameData: GameData = await gameResponse.json();
     // join the lobby
-    await event.fetch(`/api/lobbies`, {
+    await event.fetch(`${base}/api/lobbies`, {
         method: "POST",
         body: JSON.stringify({
             userID: myIDValue,
@@ -27,7 +28,7 @@ export async function load(event: LoadEvent) {
     });
     // get a reader for the lobby stream
     // subscribe to stream
-    const lobbyResponse = await event.fetch(`/api/lobbies?lobbyID=${lobbyID}`);
+    const lobbyResponse = await event.fetch(`${base}/api/lobbies?lobbyID=${lobbyID}`);
     if (!lobbyResponse.ok) {
         throw error(404, "No lobby found");
     }
@@ -39,7 +40,7 @@ export async function load(event: LoadEvent) {
 
     const exitLobby = () => {
         // remove this player from the database lobby
-        event.fetch("/api/lobbies", {
+        event.fetch(`${base}/api/lobbies`, {
             method: "POST",
             body: JSON.stringify(({
                 userID: myIDValue,

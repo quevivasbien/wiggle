@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { base } from "$app/paths";
     import type { GameData } from "$scripts/multiplayer";
 
     export let id: string;
@@ -15,6 +16,6 @@
         </div>
     </div>
     <div class="m-2">
-        <a class="text-blue-800 hover:text-gray-400" href="/multi-player/lobby/{id}">Join lobby</a>
+        <a class="text-blue-800 hover:text-gray-400" href="{base}/multi-player/lobby/{id}">Join lobby</a>
     </div>
 </li>

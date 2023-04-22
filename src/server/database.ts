@@ -1,11 +1,11 @@
 import { DATABASE_URL, SERVICE_ACCOUNT } from "$env/static/private";
 
-import { credential, initializeApp } from "firebase-admin";
+import admin from "firebase-admin";
 
 const serviceAccount = JSON.parse(SERVICE_ACCOUNT);
 
-const app = initializeApp({
-    credential: credential.cert(serviceAccount),
+const app = admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount),
     databaseURL: DATABASE_URL,
 });
 

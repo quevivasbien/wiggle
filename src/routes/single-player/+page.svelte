@@ -3,6 +3,7 @@
     import Game from "$components/Game.svelte";
     import { slide } from "svelte/transition";
     import StyledButton from "$components/StyledButton.svelte";
+    import { base } from "$app/paths";
 
     let playing = false;
 
@@ -50,7 +51,7 @@
     </form>
 
     <div class="pt-4 pb-2">
-        <StyledButton href="/">
+        <StyledButton href="{base}/">
             Back to home
         </StyledButton>
     </div>

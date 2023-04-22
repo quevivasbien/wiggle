@@ -2,6 +2,8 @@
     import { goto } from "$app/navigation";
     import { onMount, onDestroy } from "svelte";
     import { myID } from "$data/stores";
+    import { base } from "$app/paths";
+    import StyledButton from "$components/StyledButton.svelte";
 
     export let data;
     if (!data.gameData) {
@@ -46,7 +48,7 @@
             throw Error("playersReady is undefined");
         }
         // tell the server you're ready
-        fetch("/api/lobbies", {
+        fetch(`${base}/api/lobbies`, {
             method: "POST",
             body: JSON.stringify({
                 userID: $myID,
@@ -59,7 +61,7 @@
     }
 
     function startGame() {
-        goto(`/multi-player/game/${data.lobbyID}`);
+        goto(`${base}/multi-player/game/${data.lobbyID}`);
     }
 
 </script>
@@ -111,3 +113,7 @@
         </div>
     {/if}
 {/if}
+
+<div class="mt-8 mb-4">
+    <StyledButton href="{base}/multi-player">Exit lobby</StyledButton>
+</div>

@@ -1,9 +1,10 @@
 import { goto } from "$app/navigation";
+import { base } from "$app/paths";
 import type { LoadEvent } from "@sveltejs/kit";
 
 export async function load(event: LoadEvent) {
     // subscribe to games state updates
-    const response = await event.fetch("/api/games");
+    const response = await event.fetch(`${base}/api/games`);
     const gamesStream = response.body;
     if (!gamesStream) {
         throw new Error("No games stream in response");
@@ -12,7 +13,7 @@ export async function load(event: LoadEvent) {
 
     const newGame = async (size: number, minLength: number) => {
         const response = await event.fetch(
-            "/api/games",
+            `${base}/api/games`,
             {
                 method: "POST",
                 body: JSON.stringify({ size, minLength }),
@@ -23,7 +24,7 @@ export async function load(event: LoadEvent) {
         );
         const gameID = await response.text();
         // join the new lobby
-        goto(`/multi-player/lobby/${gameID}`);
+        goto(`${base}/multi-player/lobby/${gameID}`);
     }
 
     return {

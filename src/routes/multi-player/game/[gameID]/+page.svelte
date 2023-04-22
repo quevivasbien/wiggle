@@ -4,6 +4,8 @@
     import { onMount, onDestroy } from 'svelte';
     import BoardData from '$scripts/board';
     import { myID } from '$data/stores';
+    import StyledButton from '$components/StyledButton.svelte';
+    import { base } from '$app/paths';
 
     console.log("my id is " + $myID);
 
@@ -99,3 +101,7 @@ Words found:
     {/each}
 </div>
 {/if}
+
+<div class="mt-8 mb-4">
+    <StyledButton href="{base}/">Quit</StyledButton>
+</div>
