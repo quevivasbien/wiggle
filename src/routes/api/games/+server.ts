@@ -1,7 +1,6 @@
 import { database } from '$server/database';
 
 import { MultiplayerGame, type GameData } from '$scripts/multiplayer';
-import { ref, onValue, get, type Unsubscribe } from "firebase/database";
 import BoardData from '$scripts/board';
 
 let games: Record<string, GameData> = {};

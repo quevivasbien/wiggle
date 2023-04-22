@@ -26,7 +26,6 @@
 		"@sveltejs/adapter-node": "^1.2.3",
 		"@vercel/edge-config": "^0.1.7",
 		"dotenv": "^16.0.3",
-		"firebase": "^9.19.1",
 		"firebase-admin": "^11.7.0"
 	}
 }
