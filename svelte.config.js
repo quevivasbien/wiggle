@@ -1,4 +1,4 @@
-import adapter from '@sveltejs/adapter-node';
+import adapter from '@sveltejs/adapter-vercel';
 import { vitePreprocess } from '@sveltejs/kit/vite';
 
 /** @type {import('@sveltejs/kit').Config} */
@@ -21,12 +21,13 @@ const config = {
 			$data: './src/data',
 			$scripts: './src/scripts',
 			$server: './src/server',
-			$base: process.env.NODE_ENV === 'development' ? '' : '/wiggle',
+			// $base: process.env.NODE_ENV === 'development' ? '' : '/wiggle',
+			$base: '',
 		},
 		// if dev build, base path is /, otherwise it's /wiggle/
-		paths: {
-			base: process.env.NODE_ENV === 'development' ? '' : '/wiggle'
-		}
+		// paths: {
+		// 	base: process.env.NODE_ENV === 'development' ? '' : '/wiggle'
+		// }
 	}
 };
 
