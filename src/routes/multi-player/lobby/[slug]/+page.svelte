@@ -4,64 +4,52 @@
     import { myID } from "$data/stores";
     import { base } from "$app/paths";
     import StyledButton from "$components/StyledButton.svelte";
+    import { database } from "$scripts/database.js";
+    import { onValue, ref } from "firebase/database";
 
     export let data;
-    if (!data.gameData) {
-        throw Error("gameData is undefined");
-    }
     const { size, minLength } = data.gameData;
 
     let playersReady: Record<string, boolean>;
     $: allPlayersReady = playersReady && Object.values(playersReady).every((ready) => ready);
-    $: readyToStart = allPlayersReady && Object.keys(playersReady).length > 1;
-    $: if (readyToStart) {
-        setTimeout(startGame, 1000);
-    }
+    let gameIsStarting = false;
 
     onMount(async () => {
-        const reader = data.lobbyStreamReader;
-        if (!reader) {
-            throw Error("lobbyStreamReader is undefined");
-        }
-        while (true) {
-            const { done, value } = await reader.read();
-            if (done) {
-                console.log("Lobby stream received done signal");
-                break;
+        // subscribe to lobby updates
+        const lobbyRef = ref(database, `lobbies/${data.lobbyID}`);
+        onValue(lobbyRef, (snapshot) => {
+            playersReady = snapshot.val() ?? {};
+            if (!playersReady) {
+                console.log("playersReady is null");
+                return;
             }
-            console.log("Got value from lobby stream: " + value);
-            playersReady = JSON.parse(value);
-        }
+            if (Object.keys(playersReady).length > 1 && Object.values(playersReady).every((ready) => ready)) {
+                startGame();
+            }
+        });
     });
 
-    onDestroy(() => {
-        const exitLobby = data.exitLobby;
-        if (!exitLobby) {
-            throw Error("tried to exit lobby but exitLobby is undefined");
-        }
-        exitLobby();
-    });
+    onDestroy(data.exitLobby);
 
     let ready = false;
     function setReady() {
         if (playersReady === undefined) {
             throw Error("playersReady is undefined");
         }
-        // tell the server you're ready
-        fetch(`${base}/api/lobbies`, {
-            method: "POST",
-            body: JSON.stringify({
-                userID: $myID,
-                lobbyID: data.lobbyID,
-                action: "ready",
-            }),
-        });
+        // update database ready state
+        data.setReady();
         // set the local ready state
         ready = true;
     }
 
     function startGame() {
-        goto(`${base}/multi-player/game/${data.lobbyID}`);
+        gameIsStarting = true;
+        // update database to indicate game start
+        data.startGame();
+        // wait 1s, then navigate to game page
+        setTimeout(() => {
+            goto(`${base}/multi-player/game/${data.lobbyID}`);
+        }, 1000);
     }
 
 </script>
@@ -102,12 +90,12 @@
     </div>
     
     
-    {#if allPlayersReady && !readyToStart }
+    {#if allPlayersReady && !gameIsStarting }
         <div class="m-2 p-2 italic">
             Waiting for at least one more player...
         </div>
     {/if}
-    {#if readyToStart }
+    {#if gameIsStarting }
         <div class="m-2 p-2 italic">
             All players are ready! Starting game...
         </div>

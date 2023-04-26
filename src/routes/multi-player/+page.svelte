@@ -3,35 +3,53 @@
     import { setContext } from "svelte";
     setContext("preload", null);
 
-    import type { GameData } from "$scripts/multiplayer";
-    import { onDestroy, onMount } from "svelte";
+    import { onMount } from "svelte";
     import GamePreview from "./GamePreview.svelte";
     import { slide } from "svelte/transition";
     import StyledButton from "$components/StyledButton.svelte";
     import { base } from "$app/paths";
+    import BoardData from "$scripts/board";
+    import { newRandomID } from "$scripts/utils";
+    import { get, onValue, ref, set } from "firebase/database";
+    import { database } from "$scripts/database";
+    import { goto } from "$app/navigation";
 
-    export let data;
+    interface GameData {
+        chars: string;
+        minLength: number;
+        size: number;
+    }
 
     let games: Record<string, GameData>;
     $: gameIDs = games ? Object.keys(games) : [];
 
     onMount(async () => {
-        while (true) {
-            const { done, value } = await data.gamesReader.read();
-            if (done) {
-                console.log("Received done signal from gamesReader");
-                break;
-            }
-            console.log("Received games update: ", value);
-            games = JSON.parse(value);
-        }
-
+        // subscribe to games state updates
+        const gamesRef = ref(database, "games");
+        onValue(gamesRef, (snapshot) => {
+            games = snapshot.val() ?? {};
+            console.log("Received games update: ", games);
+        });
     });
 
-    onDestroy(() => {
-        // close the stream
-        data.gamesReader.cancel();
-    });
+    async function newGame(size: number, minLength: number) {
+        const board = BoardData.random(size, minLength);
+        // get a new unique id
+        let id = '';
+        do {
+            id = newRandomID();
+        } while ((await get(ref(database, 'games/' + id))).exists());
+        // add the game to the database
+        const gameRef = ref(database, 'games/' + id);
+        const gameData = {
+            size: board.size,
+            chars: board.chars,
+            minLength: board.minLength,
+        };
+        await set(gameRef, gameData);
+        // join the new lobby
+        goto(`${base}/multi-player/lobby/${id}`);
+    }
 
     let showNewGameMenu = false;
     let size: number = 4;
@@ -45,7 +63,7 @@
             return;
         }
         creatingGame = true;
-        data.newGame(size, minLength);
+        newGame(size, minLength);
     }
 
 </script>
