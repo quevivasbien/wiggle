@@ -5,6 +5,7 @@
     import AllWords from "$components/AllWords.svelte";
     import StyledButton from "./StyledButton.svelte";
     import Board from "./Board.svelte";
+    import { base } from "$app/paths";
 
     export let size: number;
     export let minLength: number;
@@ -50,7 +51,7 @@
     <!-- shown if game is done-->
     <AllWords board={board} wordsFound={wordsFound} />
     <div class="mt-8">
-        <StyledButton href="/">New game</StyledButton>
+        <StyledButton href="{base}/">New game</StyledButton>
     </div>
 {:else}
     <!-- shown during game -->

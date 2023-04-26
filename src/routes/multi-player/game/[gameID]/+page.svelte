@@ -4,8 +4,10 @@
     import { onMount, onDestroy } from 'svelte';
     import BoardData from '$scripts/board';
     import { myID } from '$data/stores';
-
-    console.log("my id is " + $myID);
+    import StyledButton from '$components/StyledButton.svelte';
+    import { base } from '$app/paths';
+    import { onValue, ref } from 'firebase/database';
+    import { database } from '$scripts/database';
 
     interface GameData {
         chars: string;
@@ -24,7 +26,7 @@
     }
 
     export let data: PageData;
-    const { gameID, gameData, wordsFoundStreamReader, submitWord, quit } = data;
+    const { gameID, gameData, submitWord, quit } = data;
 
     let board: BoardData;
     let wordsFound: Record<string, string[]>;
@@ -34,15 +36,11 @@
         const { chars, size, minLength } = gameData;
         board = new BoardData(size, chars, minLength);
         // subscribe to game stream
-        while (true) {
-            const { done, value } = await wordsFoundStreamReader.read();
-            if (done) {
-                console.log('Game stream received done signal');
-                break;
-            }
-            console.log('Got value from game stream: ' + value);
-            wordsFound = JSON.parse(value);
-        }
+        const wordsFoundRef = ref(database, `activeGames/${gameID}/wordsFound`);
+        onValue(wordsFoundRef, (snapshot) => {
+            wordsFound = snapshot.val() ?? {};
+            console.log("updated wordsFound", wordsFound);
+        });
     });
 
     onDestroy(quit);
@@ -51,7 +49,7 @@
 
     async function addWordFound(word: string): Promise<string | void> {
         // check if word is in local copy of words found,
-        // if not, send to server for approval
+        // if not, check on database for approval
         word = word.toLowerCase();
         for (const player in wordsFound) {
             if (wordsFound[player].includes(word)) {
@@ -67,7 +65,7 @@
         if (!accepted) {
             return 'Word already found by another player';
         }
-        // word is ok, will be added by server to list of words found
+        // word is ok, will be added on database to list of words found
     }
 
 </script>
@@ -99,3 +97,7 @@ Words found:
     {/each}
 </div>
 {/if}
+
+<div class="mt-8 mb-4">
+    <StyledButton href="{base}/">Quit</StyledButton>
+</div>
