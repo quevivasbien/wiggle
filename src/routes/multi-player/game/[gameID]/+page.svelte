@@ -77,10 +77,12 @@
 {/if}
 
 {#if wordsFound}
-Words found:
-<div class="flex flex-row justify-center">
+<div class="text-lg p-2">
+    Words found:
+</div>
+<div class="flex flex-row justify-center p-y-2 rounded-md border-y-2 border-gray-300">
     {#each gameData.players as player, i}
-        <div class="flex flex-col basis-40 p-2 m-2 rounded-md {player === $myID ? 'drop-shadow bg-gray-100' : ''}">
+        <div class="flex flex-col flex-auto basis-40 p-2 rounded-md {player === $myID ? 'drop-shadow bg-gray-100' : ''} overflow-y-auto max-h-64 sm:h-96">
             <div class="p-3">
                 <div class="text-xl pt-1">Player {i+1}</div>
                 {#if player === $myID}

@@ -48,7 +48,7 @@ export default class BoardData {
 
     private getNeighbors(i: number, visited: number[]): number[] {
         const [x, y] = this.toCoords(i);
-        return [
+        const neighbors = [
             [x - 1, y - 1],
             [x, y - 1],
             [x + 1, y - 1],
@@ -61,15 +61,17 @@ export default class BoardData {
             .filter(([x, y]) => x >= 0 && x < this.size && y >= 0 && y < this.size)
             .map(([x, y]) => this.toIndex(x, y))
             .filter((i) => !visited.includes(i));
+        // console.log(`neighbors of ${i} with visited ${visited} are`, neighbors);
+        return neighbors;
     }
 
     // check if a word is on the board, starting at a given index (i)
     private hasWordFrom(word: string, i: number, visited: number[]): boolean {
-        if (word.length == 0) {
-            return true;
-        }
         if (word[0] === this.chars[i]) {
             let tail = word.slice(1);
+            if (tail.length === 0) {
+                return true;
+            }
             visited.push(i);
             for (const j of this.getNeighbors(i, visited)) {
                 if (this.hasWordFrom(tail, j, [...visited])) {
@@ -93,12 +95,12 @@ export default class BoardData {
 
     // like hasWordFrom, but returns the path taken (or null if the word isn't found)
     private getPathFrom(word: string, i: number, visited: number[]): number[] | null {
-        if (word.length == 0) {
-            return visited;
-        }
         if (word[0] === this.chars[i]) {
             let tail = word.slice(1);
             visited.push(i);
+            if (tail.length === 0) {
+                return visited;
+            }
             for (const j of this.getNeighbors(i, visited)) {
                 const path = this.getPathFrom(tail, j, [...visited]);
                 if (path) {
