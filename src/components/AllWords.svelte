@@ -39,8 +39,11 @@
 </script>
 
 <div>
-    All words:
-    <div class="flex flex-rowc justify-center">
+    <div class="text-lg p-2">
+        All words:
+    </div>
+    <div class="p-2 rounded-md border-y-2 border-gray-300 bg-gray-100">
+    <div class="flex flex-rowc justify-center overflow-y-auto h-64 sm:h-96 p-2">
         {#each wordDisplayColumns as column}
             <div class="flex flex-col basis-40" in:fade>
             {#each column as word}
@@ -48,6 +51,7 @@
             {/each}
             </div>
         {/each}
+    </div>
     </div>
     <div class="m-4">
         You found {wordsFound.length} out of {allWords.length} ({((wordsFound.length / allWords.length) * 100).toFixed(1)}%).

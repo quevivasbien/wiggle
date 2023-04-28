@@ -1,9 +1,9 @@
 <script lang="ts">
-    import Wiggle from "$components/Wiggle.svelte";
-    import Game from "$components/Game.svelte";
     import { slide } from "svelte/transition";
-    import StyledButton from "$components/StyledButton.svelte";
     import { base } from "$app/paths";
+    import Wiggle from "$components/Wiggle.svelte";
+    import StyledButton from "$components/StyledButton.svelte";
+    import Game from "./Game.svelte";
 
     let playing = false;
 

@@ -3,8 +3,8 @@
     import { onMount } from "svelte";
     import BoardData from "$scripts/board";
     import AllWords from "$components/AllWords.svelte";
-    import StyledButton from "./StyledButton.svelte";
-    import Board from "./Board.svelte";
+    import StyledButton from "$components/StyledButton.svelte";
+    import Board from "$components/Board.svelte";
     import { base } from "$app/paths";
 
     export let size: number;

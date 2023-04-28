@@ -77,7 +77,10 @@
     {#each board.getRows() as row, i}
         <div class="flex flex-row">
             {#each row as cell, j}
-                <button class="flex m-1 w-10 h-10 border border-gray-400 rounded-md drop-shadow-sm items-center justify-center bg-gray-100 capitalize cursor-pointer {path.includes(board.toIndex(j, i)) ? 'font-bold' : 'font-normal'} {highlights.includes(board.toIndex(j, i)) ? 'text-green-500' : ''}" on:click={() => clickLetter(j, i)}>
+                <button
+                    class="flex m-1 w-10 h-10 sm:w-12 sm:h-12 sm:text-lg rounded-md drop-shadow items-center justify-center bg-gray-100 capitalize cursor-pointer {path.includes(board.toIndex(j, i)) ? 'font-bold' : 'font-normal'} {highlights.includes(board.toIndex(j, i)) ? 'text-green-500' : ''}"
+                    on:click={() => clickLetter(j, i)}
+                >
                     {expandQu(cell)}
                 </button>
             {/each}
