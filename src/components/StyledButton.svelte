@@ -4,7 +4,7 @@
     export let onclick: (() => void) | undefined = undefined;
 </script>
 
-{#if href}
+{#if href !== undefined}
     <a href={href} class="sm:w-1/3 mx-auto my-4 py-2 px-3 rounded-lg bg-white border-2 hover:border-blue-100 focus:bg-gray-100 drop-shadow">
         <slot />
     </a>

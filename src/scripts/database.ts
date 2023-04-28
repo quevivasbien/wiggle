@@ -14,3 +14,23 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 export const database = getDatabase(app);
+
+// basic game data generated when lobby is created
+// shared when joining lobby
+export interface GameData {
+    size: number;
+    chars: string;
+    minLength: number;
+    creationTime: number;
+    playersInLobby: number;
+};
+
+// data for active games
+export interface ActiveGameData {
+    size: number;
+    chars: string;
+    minLength: number;
+    timeStarted: number;
+    players?: string[]; // player ids of players currently in the game
+    wordsFound?: Record<string, string[]>; // player id -> words found
+}

@@ -11,14 +11,8 @@
     import BoardData from "$scripts/board";
     import { newRandomID } from "$scripts/utils";
     import { get, onValue, ref, set } from "firebase/database";
-    import { database } from "$scripts/database";
+    import { database, type ActiveGameData, type GameData } from "$scripts/database";
     import { goto } from "$app/navigation";
-
-    interface GameData {
-        chars: string;
-        minLength: number;
-        size: number;
-    }
 
     let games: Record<string, GameData>;
     $: gameIDs = games ? Object.keys(games) : [];
@@ -28,9 +22,45 @@
         const gamesRef = ref(database, "games");
         onValue(gamesRef, (snapshot) => {
             games = snapshot.val() ?? {};
+            removeExpiredGames();
             console.log("Received games update: ", games);
         });
     });
+
+    function removeExpiredGames() {
+        // remove games that have been in the database for more than 12 hours
+        // or have no players in lobby & have been in the database for more than 1 minute
+        const now = Date.now();
+        for (const id in games) {
+            const game = games[id];
+            const expired = (game.playersInLobby === 0 && now - game.creationTime > 60 * 1000)
+                || now - game.creationTime > 12 * 60 * 60 * 1000;
+            if (expired) {
+                console.log(`Removing expired game ${id}`);
+                // remove game from database
+                const gameRef = ref(database, "games/" + id);
+                set(gameRef, null);
+                // remove corresponding lobby
+                const lobbyRef = ref(database, "lobbies/" + id);
+                set(lobbyRef, null);
+            }
+        }
+        // do the same thing with activeGames
+        const activeGamesRef = ref(database, "activeGames");
+        get(activeGamesRef).then((snapshot) => {
+            const activeGames: Record<string, ActiveGameData> = snapshot.val() ?? {};
+            for (const id in activeGames) {
+                const game = activeGames[id];
+                const expired = now - game.timeStarted > 12 * 60 * 60 * 1000;
+                if (expired) {
+                    console.log(`Removing expired active game ${id}`);
+                    // remove game from database
+                    const gameRef = ref(database, "activeGames/" + id);
+                    set(gameRef, null);
+                }
+            }
+        });
+    }
 
     async function newGame(size: number, minLength: number) {
         const board = BoardData.random(size, minLength);
@@ -45,6 +75,8 @@
             size: board.size,
             chars: board.chars,
             minLength: board.minLength,
+            creationTime: Date.now(),
+            playersInLobby: 0,
         };
         await set(gameRef, gameData);
         // join the new lobby
@@ -65,7 +97,6 @@
         creatingGame = true;
         newGame(size, minLength);
     }
-
 </script>
 
 <div>

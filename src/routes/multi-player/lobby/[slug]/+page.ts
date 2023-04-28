@@ -1,22 +1,31 @@
-import { error, redirect, type LoadEvent } from '@sveltejs/kit';
+import { error, type LoadEvent } from '@sveltejs/kit';
 import * as stores from 'svelte/store';
 import { myID } from "$data/stores";
 import { get, ref, set } from 'firebase/database';
-import { database } from '$scripts/database';
+import { database, type ActiveGameData, type GameData } from '$scripts/database';
 
 const myIDValue = stores.get(myID);
 
-async function getGameInfo(gameID: string) {
+async function getGameInfo(gameID: string): Promise<GameData> {
     const gameRef = ref(database, `games/${gameID}`);
     const snapshot = await get(gameRef);
     if (!snapshot.exists()) {
-        console.log(`When fetching game info, game ${gameID} does not exist`);
-        return null;
+        throw error(404, `Game ${gameID} does not exist. This may be because the lobby timed out.`)
     }
     return snapshot.val();
 }
 
 async function joinLobby(lobbyID: string) {
+    // add 1 to playersInLobby
+    const playersInLobbyRef = ref(database, `games/${lobbyID}/playersInLobby`);
+    await get(playersInLobbyRef).then((snapshot) => {
+        const playersInLobby: number | null = snapshot.val();
+        if (playersInLobby === null) {
+            throw error(404, `When joining lobby, game ${lobbyID} does not exist. This may be because the lobby timed out.`);
+        }
+        set(playersInLobbyRef, playersInLobby + 1);
+    });
+    // set my ready status to false
     const lobbyRef = ref(database, `lobbies/${lobbyID}`);
     await get(lobbyRef).then((snapshot) => {
         const playersReady = snapshot.val() || {};
@@ -40,7 +49,7 @@ async function startGame_(gameID: string) {
     // remove the game from the games list, save gamedata
     const gameRef = ref(database, `games/${gameID}`);
     const gameSnapshot = await get(gameRef);
-    const gameData = gameSnapshot.val();
+    const gameData: GameData | null = gameSnapshot.val();
     if (!gameData) {
         console.log("no game data when attempting to start game");
         return;
@@ -48,11 +57,14 @@ async function startGame_(gameID: string) {
     set(gameRef, null);
     // add game to active games database
     const activeGameRef = ref(database, `activeGames/${gameID}`);
-    set(activeGameRef, {
-        ...gameData,
+    const newActiveGameData: ActiveGameData = {
+        size: gameData.size,
+        chars: gameData.chars,
+        minLength: gameData.minLength,
         players,
-        // wordsFound: {},
-    });
+        timeStarted: Date.now(),
+    };
+    set(activeGameRef, newActiveGameData);
 }
 
 async function setReady_(lobbyID: string) {
@@ -78,6 +90,15 @@ async function exitLobby_(lobbyID: string) {
         }
         delete playersReady[myIDValue];
         set(lobbyRef, playersReady);
+        // subtract 1 from playersInLobby
+        const playersInLobbyRef = ref(database, `games/${lobbyID}/playersInLobby`);
+        get(playersInLobbyRef).then((snapshot) => {
+            const playersInLobby: number | null = snapshot.val();
+            if (playersInLobby === null) {
+                throw error(500, `When leaving lobby, game ${lobbyID} does not exist`);
+            }
+            set(playersInLobbyRef, playersInLobby - 1);
+        });
     });
 }
 

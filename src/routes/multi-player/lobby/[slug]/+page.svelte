@@ -67,7 +67,8 @@
     </div>
 {/if}
 {#if playersReady}
-    <div class="flex flex-col p-2 m-2 border border-gray-300">
+<div class="p-2 m-2 border border-gray-300">
+    <div class="flex flex-col">
         {#each Object.keys(playersReady).reverse() as idx, i}
             <div class="flex flex-row space-x-4 justify-center">
                 {#if idx === $myID}
@@ -100,6 +101,7 @@
             All players are ready! Starting game...
         </div>
     {/if}
+</div>
 {/if}
 
 <div class="mt-8 mb-4">

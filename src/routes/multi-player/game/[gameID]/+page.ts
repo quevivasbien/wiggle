@@ -10,7 +10,7 @@ async function getGameInfo(gameID: string) {
     const gameRef = ref(database, `activeGames/${gameID}`);
     const gameData = (await get(gameRef)).val();
     if (!gameData) {
-        throw error(404, `Game ${gameID} does not exist`);
+        throw error(404, `Game ${gameID} does not exist. This may be because the game timed out.`);
     }
     return gameData;
 }
