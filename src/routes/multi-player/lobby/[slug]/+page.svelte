@@ -8,7 +8,7 @@
     import { onValue, ref } from "firebase/database";
 
     export let data;
-    const { size, minLength } = data.gameData;
+    const { size, minLength, timeLimit } = data.gameData;
 
     let playersReady: Record<string, boolean>;
     $: allPlayersReady = playersReady && Object.values(playersReady).every((ready) => ready);
@@ -59,6 +59,9 @@
 </div>
 <div>
     Minimum word length: {minLength}
+</div>
+<div>
+    Time limit: {timeLimit ? `${timeLimit} ${timeLimit === 1 ? "minute" : "minutes"}` : "None"}
 </div>
 
 {#if playersReady === undefined}

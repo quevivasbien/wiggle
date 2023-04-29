@@ -18,6 +18,9 @@
         <div>
             Players in lobby: {game.playersInLobby}
         </div>
+        <div>
+            Time limit: {game.timeLimit ? game.timeLimit + (game.timeLimit === 1 ? ' minute' : ' minutes') : 'no time limit'}
+        </div>
     </div>
     <div class="m-2">
         <!-- this is a button instead of an <a> so onload page scripts don't get run unless the user actually clicks -->

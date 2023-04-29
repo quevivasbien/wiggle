@@ -62,7 +62,7 @@
         });
     }
 
-    async function newGame(size: number, minLength: number) {
+    async function newGame(size: number, minLength: number, timeLimit: number | null) {
         const board = BoardData.random(size, minLength);
         // get a new unique id
         let id = '';
@@ -77,6 +77,7 @@
             minLength: board.minLength,
             creationTime: Date.now(),
             playersInLobby: 0,
+            timeLimit,
         };
         await set(gameRef, gameData);
         // join the new lobby
@@ -86,6 +87,8 @@
     let showNewGameMenu = false;
     let size: number = 4;
     let minLength: number = 3;
+    let timeLimitNumber: number = 3;
+    $: timeLimit = timeLimitNumber === 6 ? null : timeLimitNumber;
 
     let creatingGame = false;
     function createGame(e: Event) {
@@ -95,7 +98,7 @@
             return;
         }
         creatingGame = true;
-        newGame(size, minLength);
+        newGame(size, minLength, timeLimit);
     }
 </script>
 
@@ -149,6 +152,17 @@
                         <input class="w-1/3 accent-gray-500" type="range" min="3" max="5" bind:value={minLength} />
                         <div class="px-3">
                             {minLength}
+                        </div>
+                    </div>
+                </label>
+                <label class="p-2" for="timeLimitNumber">
+                    <div class="p-3">
+                        Time limit:
+                    </div>
+                    <div class="flex flex-row justify-center">
+                        <input class="w-1/3 accent-gray-500" type="range" min="1" max="6" bind:value={timeLimitNumber} />
+                        <div class="px-3">
+                            {timeLimit === null ? 'no time limit' : timeLimit + (timeLimit === 1 ? ' minute' : ' minutes')}
                         </div>
                     </div>
                 </label>

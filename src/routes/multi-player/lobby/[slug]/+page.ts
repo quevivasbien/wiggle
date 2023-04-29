@@ -62,6 +62,7 @@ async function startGame_(gameID: string) {
         chars: gameData.chars,
         minLength: gameData.minLength,
         players,
+        timeLimit: gameData.timeLimit,
         timeStarted: Date.now(),
     };
     set(activeGameRef, newActiveGameData);

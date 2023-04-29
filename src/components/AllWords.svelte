@@ -42,8 +42,8 @@
     <div class="text-lg p-2">
         All words:
     </div>
-    <div class="p-2 rounded-md border-y-2 border-gray-300 bg-gray-100">
-        <div class="flex flex-rowc justify-center overflow-y-auto h-64 sm:h-96 p-2">
+    <div class="p-2 rounded-md border-b-2 border-gray-300 bg-gray-100">
+        <div class="flex flex-row justify-center overflow-y-auto max-h-64 sm:max-h-96 p-2">
             {#each wordDisplayColumns as column}
                 <div class="flex flex-col basis-40" in:fade>
                 {#each column as word}

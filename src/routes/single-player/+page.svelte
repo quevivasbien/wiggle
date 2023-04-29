@@ -9,6 +9,8 @@
 
     let size = 4;
     let minLength = 3;
+    let timeLimitNumber = 3;
+    $: timeLimit = timeLimitNumber === 6 ? null : timeLimitNumber;
 
     $: wiggleSpacing = playing ? 5000 : 2000;
 
@@ -46,6 +48,18 @@
                     {minLength}
                 </div>
             </div>
+            
+        </label>
+        <label class="p-2" for="timeLimitNumber">
+            <div class="p-3">
+                Time limit:
+            </div>
+            <div class="flex flex-row justify-center">
+                <input class="w-1/3 accent-gray-500" type="range" min="1" max="6" bind:value={timeLimitNumber} />
+                <div class="px-3">
+                    {timeLimit === null ? 'no time limit' : timeLimit + (timeLimit === 1 ? ' minute' : ' minutes')}
+                </div>
+            </div>
         </label>
         <button type="submit" class="w-1/3 mx-auto my-4 py-2 px-3 rounded-lg bg-white border-2 hover:border-blue-100 focus:bg-gray-100 drop-shadow">Play</button>
     </form>
@@ -57,6 +71,6 @@
     </div>
 {:else}
     <div transition:slide>
-        <Game size={size} minLength={minLength} />
+        <Game size={size} minLength={minLength} timeLimit={timeLimit} />
     </div>
 {/if}

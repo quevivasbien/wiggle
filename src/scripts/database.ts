@@ -21,8 +21,9 @@ export interface GameData {
     size: number;
     chars: string;
     minLength: number;
-    creationTime: number;
-    playersInLobby: number;
+    creationTime: number;  // time that the game lobby was created
+    playersInLobby: number;  // number of players currently in the lobby
+    timeLimit?: number;  // duration in minutes of the game, if null, no time limit
 };
 
 // data for active games
@@ -30,7 +31,8 @@ export interface ActiveGameData {
     size: number;
     chars: string;
     minLength: number;
+    timeLimit?: number;  // duration in minutes of the game, if null, no time limit
     timeStarted: number;
-    players?: string[]; // player ids of players currently in the game
-    wordsFound?: Record<string, string[]>; // player id -> words found
+    players?: string[];  // player ids of players currently in the game
+    wordsFound?: Record<string, string[]>;  // player id -> words found
 }

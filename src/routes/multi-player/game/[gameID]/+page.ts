@@ -2,13 +2,13 @@ import { error, type LoadEvent } from "@sveltejs/kit";
 import * as stores from "svelte/store";
 import { get, ref, remove, set } from "firebase/database";
 import { myID } from "$data/stores";
-import { database } from "$scripts/database";
+import { database, type ActiveGameData } from "$scripts/database";
 
 const myIDValue = stores.get(myID);
 
 async function getGameInfo(gameID: string) {
     const gameRef = ref(database, `activeGames/${gameID}`);
-    const gameData = (await get(gameRef)).val();
+    const gameData: ActiveGameData = (await get(gameRef)).val();
     if (!gameData) {
         throw error(404, `Game ${gameID} does not exist. This may be because the game timed out.`);
     }
@@ -62,7 +62,7 @@ export async function load(event: LoadEvent) {
     // get game data
     const gameData = await getGameInfo(gameID);
     // check that the user belongs in this game
-    if (!gameData.players.includes(myIDValue)) {
+    if (!gameData.players || !gameData.players.includes(myIDValue)) {
         throw error(403, "You are not a player in this game. This may be because you left or refreshed the page.");
     }
     const submitWord = async (word: string) => submitWord_(gameID, word);
