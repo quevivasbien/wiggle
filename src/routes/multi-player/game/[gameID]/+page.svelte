@@ -109,7 +109,7 @@
 </div>
 <div class="flex flex-row flex-wrap justify-center p-y-2 rounded-md border-y-2 border-gray-300">
     {#each players as player, i}
-        <div class="flex flex-col flex-auto basis-40 p-2 rounded-md {player === $myID ? 'drop-shadow bg-gray-100' : ''} overflow-y-auto max-h-64 sm:max-h-96">
+        <div class="flex flex-col flex-auto basis-40 p-2 rounded-md {player === $myID ? 'drop-shadow bg-gray-100' : ''} overflow-y-auto max-h-64 sm:max-h-96 space-y-2">
             <div class="p-3">
                 <div class="text-xl pt-1">Player {i+1}</div>
                 {#if player === $myID}

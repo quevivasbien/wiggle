@@ -17,19 +17,50 @@
 
     let wordInput: string = "";
     let path: number[] = [];
-    // when wordInput changes, update path
-    $: {
-        if (board) {
-            if (!wordInput) {
-                path = [];
-            }
-            path = board.getPath(compressQu(wordInput.toLowerCase())) || [];
+    $: updatePath(wordInput);  // update path whenever wordInput changes
+    
+    function updatePath(wordInput: string) {
+        if (!wordInput) {
+            path = [];
         }
+        else if (pathMatches(wordInput)) {
+            // path already works, no need to update
+            return;
+        }
+        else {
+            path = board.getPath(compressQu(wordInput.toLowerCase())) ?? [];
+        }
+    }
+
+    function pathMatches(wordInput: string) {
+        const wordOnPath = path.map((i) => board.chars[i]).join("");
+        return wordOnPath === wordInput;
     }
 
     function clickLetter(x: number, y: number) {
         const index = board.toIndex(x, y);
+        if (path.length > 0) {
+            if (path[path.length - 1] === index) {
+                // deselect tile
+                path.pop();
+                wordInput = wordInput.slice(1, wordInput.length - 1);
+                return;
+            }
+            if (path.includes(index) || !neighbors(index).includes(path[path.length-1])) {
+                // already selected or not adjacent to last selection
+                return;
+            }
+        }
         wordInput += expandQu(board.chars[index]);
+        path = [...path, index];
+    }
+
+    function neighbors(index: number) {
+        return [
+            index - board.size - 1, index - board.size, index - board.size + 1,
+            index - 1, index + 1,
+            index + board.size - 1, index + board.size, index + board.size + 1
+        ];
     }
 
     let alertText = "";
