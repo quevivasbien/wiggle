@@ -1,7 +1,7 @@
 <script lang="ts">
     import { goto } from "$app/navigation";
     import { onMount, onDestroy } from "svelte";
-    import { myID } from "$data/stores";
+    import { myID } from "$scripts/database";
     import { base } from "$app/paths";
     import StyledButton from "$components/StyledButton.svelte";
     import { database } from "$scripts/database.js";
@@ -27,6 +27,7 @@
                 startGame();
             }
         });
+        console.log(`On lobby page, myID is ${$myID}`);
     });
 
     onDestroy(data.exitLobby);

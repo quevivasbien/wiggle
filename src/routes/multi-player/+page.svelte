@@ -11,7 +11,7 @@
     import BoardData from "$scripts/board";
     import { newRandomID } from "$scripts/utils";
     import { get, onValue, ref, set } from "firebase/database";
-    import { database, type ActiveGameData, type GameData } from "$scripts/database";
+    import { database, myID, type ActiveGameData, type GameData } from "$scripts/database";
     import { goto } from "$app/navigation";
 
     let games: Record<string, GameData>;
@@ -20,6 +20,12 @@
     onMount(async () => {
         // subscribe to games state updates
         const gamesRef = ref(database, "games");
+        // force authentication before proceeding
+        if ($myID === undefined) {
+            console.log("Waiting for authentication...");
+            setTimeout(() => {}, 200);
+        }
+        console.log(`On games page, myID is ${$myID}`);
         onValue(gamesRef, (snapshot) => {
             games = snapshot.val() ?? {};
             removeExpiredGames();

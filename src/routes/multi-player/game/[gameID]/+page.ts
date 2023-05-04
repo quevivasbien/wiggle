@@ -1,7 +1,7 @@
 import { error, type LoadEvent } from "@sveltejs/kit";
 import * as stores from "svelte/store";
 import { get, ref, remove, set } from "firebase/database";
-import { myID } from "$data/stores";
+import { myID } from "$scripts/database";
 import { database, type ActiveGameData } from "$scripts/database";
 
 const myIDValue = stores.get(myID);

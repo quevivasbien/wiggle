@@ -1,6 +1,6 @@
 import { error, type LoadEvent } from '@sveltejs/kit';
 import * as stores from 'svelte/store';
-import { myID } from "$data/stores";
+import { myID } from "$scripts/database";
 import { get, ref, set } from 'firebase/database';
 import { database, type ActiveGameData, type GameData } from '$scripts/database';
 
@@ -81,9 +81,13 @@ async function setReady_(lobbyID: string) {
     });
 }
 
-async function exitLobby_(lobbyID: string) {
+function exitLobby_(lobbyID: string) {
     const lobbyRef = ref(database, `lobbies/${lobbyID}`);
-    await get(lobbyRef).then((snapshot) => {
+    get(lobbyRef).then((snapshot) => {
+        if (!snapshot.exists()) {
+            console.log("When attempting to leave lobby, lobby does not exist");
+            return;
+        }
         const playersReady = snapshot.val() || {};
         if (playersReady[myIDValue] === undefined) {
             console.log("When attempting to leave lobby, user not in lobby");

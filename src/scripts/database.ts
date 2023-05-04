@@ -1,5 +1,7 @@
 import { initializeApp } from 'firebase/app';
 import { getDatabase } from 'firebase/database';
+import { getAuth, onAuthStateChanged, signInAnonymously } from 'firebase/auth';
+import { readable, type Readable } from "svelte/store";
 
 const firebaseConfig = {
     apiKey: "AIzaSyA0HI902uNE_JVegCEzWpGuIISySC2cds4",
@@ -14,6 +16,24 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 export const database = getDatabase(app);
+
+const auth = getAuth(app);
+signInAnonymously(auth).then(() => {
+    console.log("signed in anonymously");
+}).catch((error) => {
+    console.log("error signing in anonymously");
+    console.log(error);
+});
+
+// save user id as a store that can be accessed from anywhere
+export let myID: Readable<string>;
+
+onAuthStateChanged(auth, (user) => {
+    if (user) {
+        console.log(`user id set as ${user.uid}`);
+        myID = readable(user.uid);
+    }
+});
 
 // basic game data generated when lobby is created
 // shared when joining lobby
