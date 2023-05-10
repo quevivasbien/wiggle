@@ -42,8 +42,8 @@
         if (path.length > 0) {
             if (path[path.length - 1] === index) {
                 // deselect tile
-                path.pop();
-                wordInput = wordInput.slice(1, wordInput.length - 1);
+                path = path.slice(0, path.length - 1);  // do this instead of pop so svelte sees change
+                wordInput = wordInput.slice(0, wordInput.length - 1);
                 return;
             }
             if (path.includes(index) || !neighbors(index).includes(path[path.length-1])) {

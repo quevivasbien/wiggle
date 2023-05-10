@@ -1,6 +1,6 @@
 <script lang="ts">
     // disable pre-loading
-    import { setContext } from "svelte";
+    import { onDestroy, setContext } from "svelte";
     setContext("preload", null);
 
     import { onMount } from "svelte";
@@ -17,13 +17,15 @@
     let games: Record<string, GameData>;
     $: gameIDs = games ? Object.keys(games) : [];
 
-    onMount(async () => {
+    async function runOnMount() {
         // subscribe to games state updates
         const gamesRef = ref(database, "games");
         // force authentication before proceeding
         if ($myID === undefined) {
             console.log("Waiting for authentication...");
-            setTimeout(() => {}, 200);
+            await new Promise(resolve => setTimeout(resolve, 200));
+            runOnMount();
+            return;
         }
         console.log(`On games page, myID is ${$myID}`);
         onValue(gamesRef, (snapshot) => {
@@ -31,8 +33,10 @@
             removeExpiredGames();
             console.log("Received games update: ", games);
         });
-    });
+    }
 
+    onMount(runOnMount);
+    
     function removeExpiredGames() {
         // remove games that have been in the database for more than 12 hours
         // or have no players in lobby & have been in the database for more than 1 minute

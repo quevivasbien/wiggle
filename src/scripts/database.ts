@@ -1,7 +1,7 @@
 import { initializeApp } from 'firebase/app';
 import { getDatabase } from 'firebase/database';
 import { getAuth, onAuthStateChanged, signInAnonymously } from 'firebase/auth';
-import { readable, type Readable } from "svelte/store";
+import { readable, writable, type Readable, type Writable } from "svelte/store";
 
 const firebaseConfig = {
     apiKey: "AIzaSyA0HI902uNE_JVegCEzWpGuIISySC2cds4",
@@ -26,12 +26,12 @@ signInAnonymously(auth).then(() => {
 });
 
 // save user id as a store that can be accessed from anywhere
-export let myID: Readable<string>;
+export const myID = writable<string | undefined>(undefined);
 
 onAuthStateChanged(auth, (user) => {
     if (user) {
+        myID.set(user.uid);
         console.log(`user id set as ${user.uid}`);
-        myID = readable(user.uid);
     }
 });
 
