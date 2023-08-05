@@ -11,8 +11,9 @@
     import BoardData from "$scripts/board";
     import { newRandomID } from "$scripts/utils";
     import { get, onValue, ref, set } from "firebase/database";
-    import { database, myID, type ActiveGameData, type GameData } from "$scripts/database";
+    import { database, type ActiveGameData, type GameData } from "$scripts/firebase/config";
     import { goto } from "$app/navigation";
+    import { user } from "$data/stores";
 
     let games: Record<string, GameData>;
     $: gameIDs = games ? Object.keys(games) : [];
@@ -21,13 +22,11 @@
         // subscribe to games state updates
         const gamesRef = ref(database, "games");
         // force authentication before proceeding
-        if ($myID === undefined) {
-            console.log("Waiting for authentication...");
-            await new Promise(resolve => setTimeout(resolve, 200));
-            runOnMount();
+        if ($user === null) {
+            console.log("Tried to access game lobbies before authenticating");
+            goto(`${base}/`);
             return;
         }
-        console.log(`On games page, myID is ${$myID}`);
         onValue(gamesRef, (snapshot) => {
             games = snapshot.val() ?? {};
             removeExpiredGames();
@@ -73,6 +72,10 @@
     }
 
     async function newGame(size: number, minLength: number, timeLimit: number | null) {
+        if ($user === null) {
+            console.log("Cannot create game with null user");
+            return;
+        }
         const board = BoardData.random(size, minLength);
         // get a new unique id
         let id = '';
@@ -82,6 +85,7 @@
         // add the game to the database
         const gameRef = ref(database, 'games/' + id);
         const gameData = {
+            host: $user.uid,
             size: board.size,
             chars: board.chars,
             minLength: board.minLength,

@@ -1,10 +1,10 @@
 import { error, type LoadEvent } from '@sveltejs/kit';
 import * as stores from 'svelte/store';
-import { myID } from "$scripts/database";
 import { get, ref, set } from 'firebase/database';
-import { database, type ActiveGameData, type GameData } from '$scripts/database';
+import { database, type ActiveGameData, type GameData } from '$scripts/firebase/config';
+import { user } from '$data/stores';
 
-const myIDValue = stores.get(myID);
+const myIDValue = stores.get(user)?.uid ?? '';
 
 async function getGameInfo(gameID: string): Promise<GameData> {
     const gameRef = ref(database, `games/${gameID}`);

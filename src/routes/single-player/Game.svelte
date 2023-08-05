@@ -84,12 +84,12 @@
         <div class="text-lg m-2">
             Words found ({wordsFound.length}):
         </div>
-        <div class="p-2 rounded-md border-b-2 border-gray-300 bg-gray-100">
+        <div class="p-2 rounded-md border border-gray-300 bg-gray-50">
             <div class="flex flex-row justify-center overflow-y-auto max-h-64 sm:max-h-96 p-2">
                 {#each splitWordsFound(Math.min(wordsFound.length, 3)) as column}
                     <div class="flex flex-col basis-40">
                     {#each column as word}
-                        <div class="m-1 p-2 rounded-md bg-gray-300">{word}</div>
+                        <div class="m-1 p-2 rounded-md bg-white border">{word}</div>
                     {/each}
                     </div>
                 {/each}

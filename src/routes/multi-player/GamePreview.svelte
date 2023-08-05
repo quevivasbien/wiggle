@@ -1,7 +1,6 @@
 <script lang="ts">
     import { base } from "$app/paths";
-    import { goto } from "$app/navigation";
-    import type { GameData } from "$scripts/database";
+    import type { GameData } from "$scripts/firebase/config";
 
     export let id: string;
     export let game: GameData;
@@ -23,7 +22,6 @@
         </div>
     </div>
     <div class="m-2">
-        <!-- this is a button instead of an <a> so onload page scripts don't get run unless the user actually clicks -->
-        <button class="text-blue-800 hover:text-gray-400" on:click={() => goto(`${base}/multi-player/lobby/${id}`)}>Join lobby</button>
+        <a data-sveltekit-preload-data="tap" class="text-blue-800 hover:text-gray-400 hover:underline" href={`${base}/multi-player/lobby/${id}`}>Join lobby</a>
     </div>
 </li>

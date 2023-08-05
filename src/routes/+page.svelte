@@ -1,19 +1,18 @@
 <script lang="ts">
     import StyledButton from "$components/StyledButton.svelte";
-    import Wiggle from "$components/Wiggle.svelte";
     import { base } from "$app/paths";
+    import { user } from "$data/stores";
 </script>
 
-<Wiggle wiggleSpacing={2000} />
-<div class="font-serif">
-    the wiggly word game
-</div>
-
-<div class="flex flex-col m-4 p-2 space-y-2">
+<div class="flex flex-col space-y-2">
     <StyledButton href="{base}/single-player">
         Single player
     </StyledButton>
+    {#if $user}
     <StyledButton href="{base}/multi-player">
         Multiplayer
     </StyledButton>
+    {:else}
+        <div><a class="defaultlink" href={`${base}/auth/login`}>Log in</a> to play a multiplayer game</div>
+    {/if}
 </div>

@@ -1,13 +1,12 @@
 <script lang="ts">
-    import Wiggle from '$components/Wiggle.svelte';
     import Board from '$components/Board.svelte';
     import { onMount, onDestroy } from 'svelte';
     import BoardData from '$scripts/board';
-    import { myID } from '$scripts/database';
     import StyledButton from '$components/StyledButton.svelte';
     import { base } from '$app/paths';
     import { onValue, ref } from 'firebase/database';
-    import { database, type ActiveGameData } from '$scripts/database';
+    import { database, type ActiveGameData } from '$scripts/firebase/config';
+    import { user } from '$data/stores';
 
     interface PageData {
         gameID: string;
@@ -39,7 +38,6 @@
             gameData.players = snapshot.val() ?? [];
             console.log("Updated players in game", gameData.players);
         });
-        console.log(`On game page, myID is ${$myID}`);
     });
 
     onDestroy(quit);
@@ -50,7 +48,7 @@
         word = word.toLowerCase();
         for (const player in wordsFound) {
             if (wordsFound[player].includes(word)) {
-                if (player === $myID) {
+                if (player === $user?.uid) {
                     return 'Word already found';
                 }
                 else {
@@ -98,8 +96,6 @@
     }
 </script>
 
-<Wiggle wiggleSpacing={5000} />
-
 {#if board}
     <Board board={board} addWordFound={addWordFound} formActive={secondsRemaining === null || secondsRemaining > 0} />
 {/if}
@@ -110,10 +106,10 @@
 </div>
 <div class="flex flex-row flex-wrap justify-center p-y-2 rounded-md border-y-2 border-gray-300 space-y-2">
     {#each players as player, i}
-        <div class="flex flex-col flex-auto basis-40 p-2 rounded-md {player === $myID ? 'drop-shadow bg-gray-100' : ''} overflow-y-auto max-h-64 sm:max-h-96">
+        <div class="flex flex-col flex-auto basis-40 p-2 rounded-md {player === $user?.uid ? 'drop-shadow bg-gray-100' : ''} overflow-y-auto max-h-64 sm:max-h-96">
             <div class="p-3">
                 <div class="text-xl pt-1">Player {i+1}</div>
-                {#if player === $myID}
+                {#if player === $user?.uid}
                     <div class="text-sm">(you)</div>
                 {/if}
                 {#if !gameData.players || !gameData.players.includes(player)}

@@ -1,10 +1,10 @@
 <script lang="ts">
     import { goto } from "$app/navigation";
     import { onMount, onDestroy } from "svelte";
-    import { myID } from "$scripts/database";
+    import { user } from "$data/stores";
     import { base } from "$app/paths";
     import StyledButton from "$components/StyledButton.svelte";
-    import { database } from "$scripts/database.js";
+    import { database } from "$scripts/firebase/config.js";
     import { onValue, ref } from "firebase/database";
 
     export let data;
@@ -27,7 +27,6 @@
                 startGame();
             }
         });
-        console.log(`On lobby page, myID is ${$myID}`);
     });
 
     onDestroy(data.exitLobby);
@@ -75,7 +74,7 @@
     <div class="flex flex-col">
         {#each Object.keys(playersReady).reverse() as idx, i}
             <div class="flex flex-row space-x-4 justify-center">
-                {#if idx === $myID}
+                {#if idx === $user?.uid}
                     <div>
                         Player {i + 1} (you):
                     </div>

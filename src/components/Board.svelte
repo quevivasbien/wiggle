@@ -17,17 +17,15 @@
 
     let wordInput: string = "";
     let path: number[] = [];
-    $: updatePath(wordInput);  // update path whenever wordInput changes
-    
+    $: updatePath(wordInput); // update path whenever wordInput changes
+
     function updatePath(wordInput: string) {
         if (!wordInput) {
             path = [];
-        }
-        else if (pathMatches(wordInput)) {
+        } else if (pathMatches(wordInput)) {
             // path already works, no need to update
             return;
-        }
-        else {
+        } else {
             path = board.getPath(compressQu(wordInput.toLowerCase())) ?? [];
         }
     }
@@ -42,11 +40,14 @@
         if (path.length > 0) {
             if (path[path.length - 1] === index) {
                 // deselect tile
-                path = path.slice(0, path.length - 1);  // do this instead of pop so svelte sees change
+                path = path.slice(0, path.length - 1); // do this instead of pop so svelte sees change
                 wordInput = wordInput.slice(0, wordInput.length - 1);
                 return;
             }
-            if (path.includes(index) || !neighbors(index).includes(path[path.length-1])) {
+            if (
+                path.includes(index) ||
+                !neighbors(index).includes(path[path.length - 1])
+            ) {
                 // already selected or not adjacent to last selection
                 return;
             }
@@ -57,9 +58,14 @@
 
     function neighbors(index: number) {
         return [
-            index - board.size - 1, index - board.size, index - board.size + 1,
-            index - 1, index + 1,
-            index + board.size - 1, index + board.size, index + board.size + 1
+            index - board.size - 1,
+            index - board.size,
+            index - board.size + 1,
+            index - 1,
+            index + 1,
+            index + board.size - 1,
+            index + board.size,
+            index + board.size + 1,
         ];
     }
 
@@ -76,14 +82,13 @@
             }
             setHighlights(path);
             path = [];
-        }
-        else if (status === "too-short") {
-            setAlert("Word is too short (minimum length is " + board.minLength + ")");
-        }
-        else if (status === "not-word") {
+        } else if (status === "too-short") {
+            setAlert(
+                "Word is too short (minimum length is " + board.minLength + ")"
+            );
+        } else if (status === "not-word") {
             setAlert("Word not in dictionary");
-        }
-        else if (status === "not-found") {
+        } else if (status === "not-found") {
             setAlert("Word not found on the board");
         }
         wordInput = "";
@@ -109,7 +114,15 @@
         <div class="flex flex-row">
             {#each row as cell, j}
                 <button
-                    class="flex m-1 w-10 h-10 sm:w-12 sm:h-12 sm:text-lg rounded-md drop-shadow items-center justify-center bg-gray-100 capitalize cursor-pointer {path.includes(board.toIndex(j, i)) ? 'font-bold' : 'font-normal'} {highlights.includes(board.toIndex(j, i)) ? 'text-green-500' : ''}"
+                    class="flex m-1 w-10 h-10 sm:w-12 sm:h-12 sm:text-lg rounded-md drop-shadow items-center justify-center bg-gray-100 capitalize cursor-pointer {path.includes(
+                        board.toIndex(j, i)
+                    )
+                        ? 'font-bold'
+                        : 'font-normal'} {highlights.includes(
+                        board.toIndex(j, i)
+                    )
+                        ? 'text-green-500'
+                        : ''}"
                     on:click={() => clickLetter(j, i)}
                 >
                     {expandQu(cell)}
@@ -122,8 +135,16 @@
 {#if formActive}
     <form on:submit={(e) => submit(e)} out:slide>
         <div class="flex flex-row justify-center">
-            <input class="w-2/3 max-w-2xl my-4 p-2 rounded-sm drop-shadow uppercase text-center font-bold" type="text" bind:value={wordInput} bind:this={textInputField} />
-            <button type="submit" class="m-4 py-2 px-3 rounded-lg bg-white border-2 hover:border-blue-100 focus:bg-gray-100 drop-shadow-sm">
+            <input
+                class="w-2/3 max-w-2xl my-4 p-2 rounded-sm drop-shadow uppercase text-center font-bold"
+                type="text"
+                bind:value={wordInput}
+                bind:this={textInputField}
+            />
+            <button
+                type="submit"
+                class="m-4 py-2 px-3 rounded-lg bg-white border-2 hover:border-blue-100 focus:bg-gray-100 drop-shadow-sm"
+            >
                 &#10132;
             </button>
         </div>
