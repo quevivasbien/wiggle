@@ -11,7 +11,11 @@
     import BoardData from "$scripts/board";
     import { newRandomID } from "$scripts/utils";
     import { get, onValue, ref, set } from "firebase/database";
-    import { database, type ActiveGameData, type GameData } from "$scripts/firebase/config";
+    import {
+        database,
+        type ActiveGameData,
+        type GameData,
+    } from "$scripts/firebase/config";
     import { goto } from "$app/navigation";
     import { user } from "$data/stores";
 
@@ -30,20 +34,22 @@
         onValue(gamesRef, (snapshot) => {
             games = snapshot.val() ?? {};
             removeExpiredGames();
-            console.log("Received games update: ", games);
+            // console.log("Received games update: ", games);
         });
     }
 
     onMount(runOnMount);
-    
+
     function removeExpiredGames() {
         // remove games that have been in the database for more than 12 hours
         // or have no players in lobby & have been in the database for more than 1 minute
         const now = Date.now();
         for (const id in games) {
             const game = games[id];
-            const expired = (game.playersInLobby === 0 && now - game.creationTime > 60 * 1000)
-                || now - game.creationTime > 12 * 60 * 60 * 1000;
+            const expired =
+                (game.playersInLobby === 0 &&
+                    now - game.creationTime > 60 * 1000) ||
+                now - game.creationTime > 12 * 60 * 60 * 1000;
             if (expired) {
                 console.log(`Removing expired game ${id}`);
                 // remove game from database
@@ -57,7 +63,8 @@
         // do the same thing with activeGames
         const activeGamesRef = ref(database, "activeGames");
         get(activeGamesRef).then((snapshot) => {
-            const activeGames: Record<string, ActiveGameData> = snapshot.val() ?? {};
+            const activeGames: Record<string, ActiveGameData> =
+                snapshot.val() ?? {};
             for (const id in activeGames) {
                 const game = activeGames[id];
                 const expired = now - game.timeStarted > 12 * 60 * 60 * 1000;
@@ -71,21 +78,26 @@
         });
     }
 
-    async function newGame(size: number, minLength: number, timeLimit: number | null) {
+    async function newGame(
+        name: string,
+        size: number,
+        minLength: number,
+        timeLimit: number | null
+    ) {
         if ($user === null) {
             console.log("Cannot create game with null user");
             return;
         }
         const board = BoardData.random(size, minLength);
         // get a new unique id
-        let id = '';
+        let id = "";
         do {
             id = newRandomID();
-        } while ((await get(ref(database, 'games/' + id))).exists());
+        } while ((await get(ref(database, "games/" + id))).exists());
         // add the game to the database
-        const gameRef = ref(database, 'games/' + id);
+        const gameRef = ref(database, "games/" + id);
         const gameData = {
-            host: $user.uid,
+            name,
             size: board.size,
             chars: board.chars,
             minLength: board.minLength,
@@ -99,9 +111,10 @@
     }
 
     let showNewGameMenu = false;
+    let gameName: string = "";
     let size: number = 4;
     let minLength: number = 3;
-    let timeLimitNumber: number = 3;
+    let timeLimitNumber: number = 2;
     $: timeLimit = timeLimitNumber === 6 ? null : timeLimitNumber;
 
     let creatingGame = false;
@@ -111,23 +124,21 @@
             // this is so the form doesn't submit when cancelling
             return;
         }
+        if (!gameName) {
+            // cannot create game with no name
+            return;
+        }
         creatingGame = true;
-        newGame(size, minLength, timeLimit);
+        newGame(gameName, size, minLength, timeLimit);
     }
 </script>
 
 <div>
-    <div class="text-xl font-bold">
-        Game lobbies
-    </div>
+    <div class="text-xl font-bold">Game lobbies</div>
     {#if games === undefined}
-        <div class="text-xl m-2 italic">
-            Loading...
-        </div>
+        <div class="text-xl m-2 italic">Loading...</div>
     {:else if gameIDs.length === 0}
-        <div class="text-xl m-2 italic">
-            No active lobbies
-        </div>
+        <div class="text-xl m-2 italic">No active lobbies</div>
     {/if}
     <ol class="list-none list-inside">
         {#each gameIDs as gameID}
@@ -137,61 +148,83 @@
 </div>
 <div class="flex flex-col">
     {#if !showNewGameMenu}
-        <StyledButton onclick={() => showNewGameMenu = true}>
+        <StyledButton onclick={() => (showNewGameMenu = true)}>
             Create lobby
         </StyledButton>
+    {:else if creatingGame}
+        <div class="text-xl m-2 italic">Creating lobby...</div>
     {:else}
-        {#if creatingGame}
-            <div class="text-xl m-2 italic">
-                Creating lobby...
-            </div>
-        {:else}
-            <form class="flex flex-col m-2 p-2 bg-gray-100 rounded-md" on:submit={(e) => createGame(e)} transition:slide >
-                <label class="p-2" for="size">
-                    <div class="p-3">
-                        Board size:
-                    </div>
-                    <div class="flex flex-row justify-center">
-                        <input class="w-1/3 accent-gray-500" type="range" min="3" max="6" bind:value={size} />
-                        <div class="px-3">
-                            {size} x {size}
-                        </div>
-                    </div>
-                </label>
-                <label class="p-2" for="minLength">
-                    <div class="p-3">
-                        Minimum word length:
-                    </div>
-                    <div class="flex flex-row justify-center">
-                        <input class="w-1/3 accent-gray-500" type="range" min="3" max="5" bind:value={minLength} />
-                        <div class="px-3">
-                            {minLength}
-                        </div>
-                    </div>
-                </label>
-                <label class="p-2" for="timeLimitNumber">
-                    <div class="p-3">
-                        Time limit:
-                    </div>
-                    <div class="flex flex-row justify-center">
-                        <input class="w-1/3 accent-gray-500" type="range" min="1" max="6" bind:value={timeLimitNumber} />
-                        <div class="px-3">
-                            {timeLimit === null ? 'no time limit' : timeLimit + (timeLimit === 1 ? ' minute' : ' minutes')}
-                        </div>
-                    </div>
-                </label>
-                <div class="flex-row">
-                    <StyledButton onclick={() => showNewGameMenu = false}>
-                        Cancel
-                    </StyledButton>
-                    <StyledButton type="submit">
-                        Create & join
-                    </StyledButton>
+        <form
+            class="flex flex-col m-2 p-2 bg-gray-50 border rounded-md"
+            on:submit={(e) => createGame(e)}
+            transition:slide
+        >
+            <label class="p-2" for="size">
+                <div class="p-3">Game name:</div>
+                <div class="flex flex-row justify-center">
+                    <input
+                        class="w-1/3 p-2 rounded-sm drop-shadow text-center uppercase font-bold"
+                        type="text"
+                        bind:value={gameName}
+                    />
                 </div>
-            </form>
-        {/if}
+            </label>
+            <label class="p-2" for="size">
+                <div class="p-3">Board size:</div>
+                <div class="flex flex-row justify-center">
+                    <input
+                        class="w-1/3 accent-gray-500"
+                        type="range"
+                        min="3"
+                        max="6"
+                        bind:value={size}
+                    />
+                    <div class="px-3">
+                        {size} x {size}
+                    </div>
+                </div>
+            </label>
+            <label class="p-2" for="minLength">
+                <div class="p-3">Minimum word length:</div>
+                <div class="flex flex-row justify-center">
+                    <input
+                        class="w-1/3 accent-gray-500"
+                        type="range"
+                        min="3"
+                        max="5"
+                        bind:value={minLength}
+                    />
+                    <div class="px-3">
+                        {minLength}
+                    </div>
+                </div>
+            </label>
+            <label class="p-2" for="timeLimitNumber">
+                <div class="p-3">Time limit:</div>
+                <div class="flex flex-row justify-center">
+                    <input
+                        class="w-1/3 accent-gray-500"
+                        type="range"
+                        min="1"
+                        max="6"
+                        bind:value={timeLimitNumber}
+                    />
+                    <div class="px-3">
+                        {timeLimit === null
+                            ? "no time limit"
+                            : timeLimit +
+                              (timeLimit === 1 ? " minute" : " minutes")}
+                    </div>
+                </div>
+            </label>
+            <div class="flex-row">
+                <StyledButton onclick={() => (showNewGameMenu = false)}>
+                    Cancel
+                </StyledButton>
+                <StyledButton type="submit">Create & join</StyledButton>
+            </div>
+        </form>
     {/if}
 
     <StyledButton href="{base}/">Back to home</StyledButton>
-
 </div>

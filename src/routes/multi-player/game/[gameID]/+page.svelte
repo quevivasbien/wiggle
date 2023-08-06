@@ -7,6 +7,7 @@
     import { onValue, ref } from 'firebase/database';
     import { database, type ActiveGameData } from '$scripts/firebase/config';
     import { user } from '$data/stores';
+    import Game from '../../../single-player/Game.svelte';
 
     interface PageData {
         gameID: string;
@@ -18,7 +19,7 @@
 
     export let data: PageData;
     const { gameID, gameData, submitWord, quit } = data;
-    const players = gameData.players ? [...gameData.players] : [];  // players in game at beginning
+    const players = gameData.players ? {...gameData.players} : {};  // players in game at beginning
 
     let board: BoardData;
     let wordsFound: Record<string, string[]>;
@@ -31,7 +32,7 @@
         const wordsFoundRef = ref(database, `activeGames/${gameID}/wordsFound`);
         onValue(wordsFoundRef, (snapshot) => {
             wordsFound = snapshot.val() ?? {};
-            console.log("updated wordsFound", wordsFound);
+            // console.log("updated wordsFound", wordsFound);
         });
         // subscribe to updates on players in game
         onValue(ref(database, `activeGames/${gameID}/players`), (snapshot) => {
@@ -91,7 +92,7 @@
             return 'It\'s a tie!';
         }
         else {
-            return `Player ${players.indexOf(winner) + 1} wins with ${winningWords} words`;
+            return `Player ${players[winner]} wins with ${winningWords} words`;
         }
     }
 </script>
@@ -105,14 +106,17 @@
     Words found:
 </div>
 <div class="flex flex-row flex-wrap justify-center p-y-2 rounded-md border-y-2 border-gray-300 space-y-2">
-    {#each players as player, i}
+    {#each Object.keys(players) as player, i}
         <div class="flex flex-col flex-auto basis-40 p-2 rounded-md {player === $user?.uid ? 'drop-shadow bg-gray-100' : ''} overflow-y-auto max-h-64 sm:max-h-96">
             <div class="p-3">
-                <div class="text-xl pt-1">Player {i+1}</div>
-                {#if player === $user?.uid}
-                    <div class="text-sm">(you)</div>
-                {/if}
-                {#if !gameData.players || !gameData.players.includes(player)}
+                <div class="text-xl pt-1">
+                    {#if player === $user?.uid}
+                        You
+                    {:else}
+                        {players[player]}
+                    {/if}
+                </div>
+                {#if !gameData.players || !gameData.players[player]}
                     <div class="text-sm text-red-900">(quit)</div>
                 {/if}
                 <div>

@@ -1,10 +1,11 @@
 import { error, type LoadEvent } from '@sveltejs/kit';
 import * as stores from 'svelte/store';
 import { get, ref, set } from 'firebase/database';
-import { database, type ActiveGameData, type GameData } from '$scripts/firebase/config';
+import { database, type ActiveGameData, type GameData, type LobbyData } from '$scripts/firebase/config';
 import { user } from '$data/stores';
 
 const myIDValue = stores.get(user)?.uid ?? '';
+const myDisplayName = stores.get(user)?.displayName ?? '';
 
 async function getGameInfo(gameID: string): Promise<GameData> {
     const gameRef = ref(database, `games/${gameID}`);
@@ -25,12 +26,15 @@ async function joinLobby(lobbyID: string) {
         }
         set(playersInLobbyRef, playersInLobby + 1);
     });
-    // set my ready status to false
+    // set my ready status to false; add my display name to lobby info
     const lobbyRef = ref(database, `lobbies/${lobbyID}`);
     await get(lobbyRef).then((snapshot) => {
-        const playersReady = snapshot.val() || {};
-        playersReady[myIDValue] = false;
-        set(lobbyRef, playersReady);
+        const lobbyData: LobbyData = snapshot.val() ?? {};
+        lobbyData.playersReady = lobbyData.playersReady ?? {};
+        lobbyData.playersReady[myIDValue] = false;
+        lobbyData.playerNames = lobbyData.playerNames ?? {};
+        lobbyData.playerNames[myIDValue] = myDisplayName;
+        set(lobbyRef, lobbyData);
     });
 }
 
@@ -39,13 +43,12 @@ async function startGame_(gameID: string) {
     // remove the lobby from lobbies list & save list of players
     const lobbyRef = ref(database, `lobbies/${gameID}`);
     const lobbySnapshot = await get(lobbyRef);
-    const playersReady = lobbySnapshot.val();
-    if (!playersReady) {
+    const lobbyData = lobbySnapshot.val();
+    if (!lobbyData.playersReady) {
         console.log("no players in lobby when attempting to start game");
         return;
     }
     set(lobbyRef, null);
-    const players = Object.keys(playersReady);
     // remove the game from the games list, save gamedata
     const gameRef = ref(database, `games/${gameID}`);
     const gameSnapshot = await get(gameRef);
@@ -61,7 +64,7 @@ async function startGame_(gameID: string) {
         size: gameData.size,
         chars: gameData.chars,
         minLength: gameData.minLength,
-        players,
+        players: lobbyData.playerNames,
         timeLimit: gameData.timeLimit,
         timeStarted: Date.now(),
     };
@@ -69,15 +72,15 @@ async function startGame_(gameID: string) {
 }
 
 async function setReady_(lobbyID: string) {
-    const lobbyRef = ref(database, `lobbies/${lobbyID}`);
-    await get(lobbyRef).then((snapshot) => {
+    const playersReadyRef = ref(database, `lobbies/${lobbyID}/playersReady`);
+    await get(playersReadyRef).then((snapshot) => {
         const playersReady = snapshot.val() || {};
         if (playersReady[myIDValue] === undefined) {
             console.log("When attempting to set ready status, user not in lobby");
             return;
         }
         playersReady[myIDValue] = true;
-        set(lobbyRef, playersReady);
+        set(playersReadyRef, playersReady);
     });
 }
 
@@ -88,13 +91,14 @@ function exitLobby_(lobbyID: string) {
             console.log("When attempting to leave lobby, lobby does not exist");
             return;
         }
-        const playersReady = snapshot.val() || {};
-        if (playersReady[myIDValue] === undefined) {
+        const lobbyData = snapshot.val() || {};
+        if (lobbyData.playersReady[myIDValue] === undefined || lobbyData.playerNames[myIDValue] === undefined) {
             console.log("When attempting to leave lobby, user not in lobby");
             return;
         }
-        delete playersReady[myIDValue];
-        set(lobbyRef, playersReady);
+        delete lobbyData.playersReady[myIDValue];
+        delete lobbyData.playerNames[myIDValue];
+        set(lobbyRef, lobbyData);
         // subtract 1 from playersInLobby
         const playersInLobbyRef = ref(database, `games/${lobbyID}/playersInLobby`);
         get(playersInLobbyRef).then((snapshot) => {

@@ -35,19 +35,13 @@ async function submitWord_(gameID: string, word: string) {
 
 async function quit_(gameID: string) {
     const playersRef = ref(database, `activeGames/${gameID}/players`);
-    const players: string[] = (await get(playersRef)).val() ?? [];
-    const index = players.indexOf(myIDValue);
+    const players: Record<string, string> = (await get(playersRef)).val() ?? [];
     // remove player from list of players
-    if (index > -1) {
-        players.splice(index, 1);
-        set(playersRef, players);
-        console.log(`Removed player ${myIDValue} from game ${gameID}`);
-    }
-    else {
-        console.log(`Player ${myIDValue} was not in game ${gameID}`);
-    }
+    delete players[myIDValue];
+    set(playersRef, players);
+    console.log(`Removed player ${myIDValue} from game ${gameID}`);
     // if no players left, delete game
-    if (players.length === 0) {
+    if (Object.keys(players).length === 0) {
         const gameRef = ref(database, `activeGames/${gameID}`);
         await remove(gameRef);
         console.log(`Deleted game ${gameID}`);
@@ -62,7 +56,7 @@ export async function load(event: LoadEvent) {
     // get game data
     const gameData = await getGameInfo(gameID);
     // check that the user belongs in this game
-    if (!gameData.players || !gameData.players.includes(myIDValue)) {
+    if (!gameData.players || !Object.keys(gameData.players).includes(myIDValue)) {
         throw error(403, "You are not a player in this game. This may be because you left or refreshed the page.");
     }
     const submitWord = async (word: string) => submitWord_(gameID, word);

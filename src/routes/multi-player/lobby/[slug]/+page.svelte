@@ -4,25 +4,26 @@
     import { user } from "$data/stores";
     import { base } from "$app/paths";
     import StyledButton from "$components/StyledButton.svelte";
-    import { database } from "$scripts/firebase/config.js";
+    import { database, type LobbyData } from "$scripts/firebase/config";
     import { onValue, ref } from "firebase/database";
 
     export let data;
     const { size, minLength, timeLimit } = data.gameData;
 
-    let playersReady: Record<string, boolean>;
-    $: allPlayersReady = playersReady && Object.values(playersReady).every((ready) => ready);
+    let lobbyData: LobbyData;
+    $: allPlayersReady = lobbyData && Object.values(lobbyData.playersReady ?? {}).every((ready) => ready);
     let gameIsStarting = false;
 
     onMount(async () => {
         // subscribe to lobby updates
         const lobbyRef = ref(database, `lobbies/${data.lobbyID}`);
         onValue(lobbyRef, (snapshot) => {
-            playersReady = snapshot.val() ?? {};
-            if (!playersReady) {
-                console.log("playersReady is null");
+            lobbyData = snapshot.val() ?? {};
+            if (!lobbyData) {
+                console.log("lobbyData is null");
                 return;
             }
+            const playersReady = lobbyData.playersReady ?? {};
             if (Object.keys(playersReady).length > 1 && Object.values(playersReady).every((ready) => ready)) {
                 startGame();
             }
@@ -33,8 +34,8 @@
 
     let ready = false;
     function setReady() {
-        if (playersReady === undefined) {
-            throw Error("playersReady is undefined");
+        if (lobbyData === undefined) {
+            throw Error("lobbyData is undefined");
         }
         // update database ready state
         data.setReady();
@@ -64,29 +65,29 @@
     Time limit: {timeLimit ? `${timeLimit} ${timeLimit === 1 ? "minute" : "minutes"}` : "None"}
 </div>
 
-{#if playersReady === undefined}
+{#if lobbyData === undefined}
     <div class="text-xl italic">
         Loading lobby...
     </div>
 {/if}
-{#if playersReady}
+{#if lobbyData}
 <div class="p-2 m-2 border border-gray-300">
     <div class="flex flex-col">
-        {#each Object.keys(playersReady).reverse() as idx, i}
+        {#each Object.keys(lobbyData.playerNames ?? {}).reverse() as idx, i}
             <div class="flex flex-row space-x-4 justify-center">
                 {#if idx === $user?.uid}
                     <div>
-                        Player {i + 1} (you):
+                        You:
                     </div>
                     <div>
                         <label><input type="checkbox" bind:checked={ready} on:change={setReady} disabled={ready}> {ready ? "Ready" : "Not ready"}</label>
                     </div>
                 {:else}
                     <div>
-                        Player {i + 1}:
+                        {lobbyData.playerNames ? lobbyData.playerNames[idx] : "Player " + (i + 1)}:
                     </div>
                     <div>
-                        {playersReady[idx] ? "Ready" : "Not ready"}
+                        {lobbyData.playersReady && lobbyData.playersReady[idx] ? "Ready" : "Not ready"}
                     </div>
                 {/if}
             </div>

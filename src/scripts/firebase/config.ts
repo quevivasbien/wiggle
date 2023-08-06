@@ -20,7 +20,7 @@ export const auth = getAuth(app);
 // basic game data generated when lobby is created
 // shared when joining lobby
 export interface GameData {
-    host: string;
+    name: string;
     size: number;
     chars: string;
     minLength: number;
@@ -29,6 +29,12 @@ export interface GameData {
     timeLimit?: number;  // duration in minutes of the game, if null, no time limit
 };
 
+// information about current lobby state
+export interface LobbyData {
+    playersReady?: Record<string, boolean>;  // player id -> ready state
+    playerNames?: Record<string, string>;  // player id -> player display name
+}
+
 // data for active games
 export interface ActiveGameData {
     size: number;
@@ -36,6 +42,6 @@ export interface ActiveGameData {
     minLength: number;
     timeLimit?: number;  // duration in minutes of the game, if null, no time limit
     timeStarted: number;
-    players?: string[];  // player ids of players currently in the game
+    players?: Record<string, string>;  // // player id -> player display name for players currently in game
     wordsFound?: Record<string, string[]>;  // player id -> words found
 }
