@@ -1,10 +1,22 @@
-<script>
+<script lang='ts'>
     import "../app.css";
     import { base } from "$app/paths";
     import Wiggle from "$components/Wiggle.svelte";
     import { user } from "$data/stores";
     import { logout } from "$scripts/firebase/auth";
-</script>   
+    import { onMount } from "svelte";
+
+    let displayName: string = '';
+
+    onMount(() => {
+        if (!$user) {
+            return;
+        }
+        console.log("display name", $user.displayName);
+        console.log("display name", displayName); 
+        displayName = $user.displayName ?? '';
+    });
+</script>
 
 <svelte:head>
     <title>Wiggle</title>
@@ -18,7 +30,7 @@
     <div class="flex flex-row justify-between sm:max-w-lg mx-4 sm:mx-auto text-slate-600">
         <!-- <a href={`${base}/`}>Home</a> -->
         {#if $user}
-            <div class="inline-block">Logged in as <span class="font-bold">{$user.displayName}</span></div>
+            <div class="inline-block">Logged in as <span class="font-bold">{displayName}</span></div>
             <a class="text-slate-500 hover:text-gray-400 hover:underline" href={`${base}/`} on:click={logout}>Log out</a>
         {/if}
     </div>

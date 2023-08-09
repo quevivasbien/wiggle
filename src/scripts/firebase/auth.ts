@@ -22,7 +22,6 @@ export async function register(uname: string, email: string, pass: string) {
         updateProfile(auth.currentUser as User, {
             displayName: uname,
         });
-        user.set(auth.currentUser);
         return { error: null };
     }
     catch (error) {

@@ -115,7 +115,7 @@
     let size: number = 4;
     let minLength: number = 3;
     let timeLimitNumber: number = 2;
-    $: timeLimit = timeLimitNumber === 6 ? null : timeLimitNumber;
+    $: timeLimit = timeLimitNumber === 6 ? 0 : timeLimitNumber;
 
     let creatingGame = false;
     function createGame(e: Event) {

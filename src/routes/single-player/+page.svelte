@@ -18,7 +18,7 @@
 </script>
 
 {#if !playing}
-    <form class="flex flex-col m-2 p-2 bg-gray-100 rounded-md" on:submit={(e) => submitPlay(e)}>
+    <form class="flex flex-col m-2 p-2 bg-gray-50 border rounded-md" on:submit={(e) => submitPlay(e)}>
         <label class="p-2" for="size">
             <div class="p-3">
                 Board size:

@@ -4,6 +4,7 @@
     import StyledButton from "$components/StyledButton.svelte";
     import { user } from "$data/stores";
     import { register } from "$scripts/firebase/auth";
+    import type { FirebaseError } from "firebase/app";
     import { onMount } from "svelte";
     import { slide } from "svelte/transition";
 
@@ -13,6 +14,7 @@
     let passConfirm: string;
     let statusText = "";
 
+    const MIN_UNAME_LENGTH = 3;
     const MAX_UNAME_LENGTH = 15;
 
     async function submit() {
@@ -23,13 +25,30 @@
             statusText = "Password does not match";
             return;
         }
+        if (uname.length < MIN_UNAME_LENGTH) {
+            statusText = `Username must be at least ${MIN_UNAME_LENGTH} characters`;
+            return;
+        }
         if (uname.length > MAX_UNAME_LENGTH) {
             statusText = `Username must be ${MAX_UNAME_LENGTH} characters or less`;
             return;
         }
         const { error } = await register(uname, email, pass);
         if (error) {
-            statusText = "Invalid username and/or password";
+            const code = (error as FirebaseError).code;
+            switch (code) {
+                case "auth/email-already-in-use":
+                    statusText = "Email is already in use";
+                    break;
+                case "auth/invalid-email":
+                    statusText = "Invalid email address";
+                    break;
+                case "auth/weak-password":
+                    statusText = "Weak password: password should be at least 6 characters";
+                    break;
+                default:
+                    statusText = "Invalid email and/or password";
+            }
         } else {
             goto(`${base}/`);
         }
