@@ -2,20 +2,11 @@
     import "../app.css";
     import { base } from "$app/paths";
     import Wiggle from "$components/Wiggle.svelte";
-    import { user } from "$data/stores";
+    import { user, tempDisplayName } from "$data/stores";
     import { logout } from "$scripts/firebase/auth";
-    import { onMount } from "svelte";
 
-    let displayName: string = '';
+    $: displayName = $user?.displayName ?? $tempDisplayName;
 
-    onMount(() => {
-        if (!$user) {
-            return;
-        }
-        console.log("display name", $user.displayName);
-        console.log("display name", displayName); 
-        displayName = $user.displayName ?? '';
-    });
 </script>
 
 <svelte:head>

@@ -2,7 +2,7 @@
     import { goto } from "$app/navigation";
     import { base } from "$app/paths";
     import StyledButton from "$components/StyledButton.svelte";
-    import { user } from "$data/stores";
+    import { tempDisplayName, user } from "$data/stores";
     import { register } from "$scripts/firebase/auth";
     import type { FirebaseError } from "firebase/app";
     import { onMount } from "svelte";
@@ -50,6 +50,7 @@
                     statusText = "Invalid email and/or password";
             }
         } else {
+            $tempDisplayName = uname;
             goto(`${base}/`);
         }
     }

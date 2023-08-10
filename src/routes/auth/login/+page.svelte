@@ -17,7 +17,7 @@
         }
         const { error } = await login(email, pass);
         if (error) {
-            statusText = "Invalid username and/or password";
+            statusText = "Invalid email and/or password";
         } else {
             goto(`${base}/`);
         }
